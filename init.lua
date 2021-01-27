@@ -15,7 +15,9 @@ else
   return
 end
 
+dofile(modpath .. "/privs.lua")
 dofile(modpath .. "/chatcmdbuilder.lua")
+dofile(modpath .. "/commands.lua")
 dofile(modpath .. "/items.lua")
 dofile(modpath .. "/npc.lua")
 
@@ -30,14 +32,7 @@ minetest.after(0, function()
 end)
 
 minetest.register_on_shutdown(function()
-  -- local npcs = folks.backend.get_npcs()
-  -- if npcs then
-  --   for id, npc in pairs(npcs) do
-  --     minetest.log("Cycling: " .. id)
-  --     folks.backend.despawn_npc(npc)
-  --   end
-  -- end
-  folks.backend.save_npcs()
+  folks.backend.on_shutdown()
 end)
 
 minetest.log("action", "[FOLKS] Mod initialised. Running version " .. version)

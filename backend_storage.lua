@@ -29,7 +29,7 @@ end
 
 function backend.add_npc(ref)
   local def = folks.util.deepcopy(minetest.registered_entities[ref:get_luaentity().name])
-  local npc = ref:get_properties()
+  local npc = {}
   local entity = ref:get_luaentity()
   npc._npc_pos = ref:get_pos()
   npc._npc_textures = entity._npc_textures or def.initial_properties.textures
@@ -40,9 +40,10 @@ function backend.add_npc(ref)
 
   npcs[entity._npc_id] = npc
 
+  npcs[entity._npc_id]._npc_object = nil
   backend.save_npcs()
 
-  -- npcs[entity._npc_id]._npc_object = ref
+  npcs[entity._npc_id]._npc_object = entity._npc_object
 end
 
 function backend.remove_npc(ref)
@@ -55,7 +56,14 @@ function backend.save_npcs()
   storage:set_string("npcs", minetest.serialize(npcs))
 end
 
-function backend.load_npc(npc_id)
+function backend.on_shutdown()
+  for k,v in pairs(npcs) do
+    npcs[k]._npc_object = nil
+  end
+  backend.save_npcs()
+end
+
+function backend.get_npc(npc_id)
   return npcs[npc_id]
 end
 

@@ -33,7 +33,10 @@ minetest.register_tool("folks:npc_editor", {
     if entity._isfolk then
       if mobkit.is_alive(entity) and not entity._isremoved then
         -- TODO: show formspec to edit clicked npc
-        minetest.log(entity._npc_id or "none")
+        local meta = player:get_meta()
+        meta:set_string("folks_editing_npc", entity._npc_id)
+        minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", "You are now editing NPC: " .. entity._npc_id))
+        -- minetest.log(entity._npc_id or "none")
       end
     end
     return

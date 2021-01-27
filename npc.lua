@@ -23,16 +23,18 @@ folks.default_npc = {
   on_step = mobkit.stepfunc,
   -- on_activate = mobkit.actfunc,
   on_activate = function(self, staticdata, dtime_s)
+    self._npc_object = self.object
+    -- minetest.log(dump(self._npc_object))
     if staticdata ~= nil then
       staticdata = minetest.deserialize(staticdata)
-      if staticdata._npc_id ~= nil then
+      if staticdata._npc_id ~= nil then  -- saves _npc_id to memory so I can get it every time the entity is activated
         self.memory = {}
         self.memory._npc_id = staticdata._npc_id
       else
         self.memory = folks.util.deepcopy(staticdata.memory)
       end
-      local npc_data = folks.backend.load_npc(self.memory._npc_id)
-      if npc_data then
+      local npc_data = folks.backend.get_npc(self.memory._npc_id)
+      if npc_data then  -- Here I set all the customizable properties
         self.object:set_properties({
           nametag = npc_data._npc_name,
           nametag_color = npc_data._npc_name_color,
@@ -40,6 +42,7 @@ folks.default_npc = {
         self._npc_id = self.memory._npc_id
       end
     end
+
 
     mobkit.actfunc(self, staticdata, dtime_s)
   end,
@@ -64,16 +67,18 @@ folks.default_npc = {
 
 
   on_rightclick = function(self, player)
+    -- TODO: future logic for custom messages
     minetest.chat_send_player(player:get_player_name(), "Yo che mi clicchi")
   end,
 
   on_punch = function(self, puncher, t_from_last, tool_cap, dir, dmg)
-    minetest.log("action", minetest.serialize(tool_cap))
+    -- minetest.log("action", minetest.serialize(tool_cap))
   end,
 
   -- custom properties
   _isfolk = true,
   _isremoved = false,
+  _npc_object = nil,
 }
 
 
