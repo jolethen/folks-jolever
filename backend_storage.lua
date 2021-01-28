@@ -1,6 +1,7 @@
 local storage = minetest.get_mod_storage()
 local backend = {}
 local npcs = {} -- id: obj
+local npcs_objects = {}
 
 function backend.set_string(key, value)
   storage:set_string(key, minetest.serialize(value))
@@ -17,6 +18,10 @@ end
 
 function backend.get_npcs()
   return npcs
+end
+
+function backend.get_npcs_objs()
+  return npcs_objects
 end
 
 function backend.get_unique_id()
@@ -40,14 +45,14 @@ function backend.add_npc(ref)
 
   npcs[entity._npc_id] = npc
 
-  npcs[entity._npc_id]._npc_object = nil
+  -- that way I can serialize npcs without problems
+  npcs_objects[entity._npc_id] = entity._npc_object
   backend.save_npcs()
-
-  npcs[entity._npc_id]._npc_object = entity._npc_object
 end
 
 function backend.remove_npc(ref)
   npcs[ref._npc_id] = nil
+  npcs_objects[ref._npc_id] = nil
 
   backend.save_npcs()
 end
@@ -56,15 +61,20 @@ function backend.save_npcs()
   storage:set_string("npcs", minetest.serialize(npcs))
 end
 
+-- probably a better method exists but this is the only one I came up with
 function backend.on_shutdown()
-  for k,v in pairs(npcs) do
-    npcs[k]._npc_object = nil
-  end
+  -- for k,v in pairs(npcs) do
+  --   npcs[k]._npc_object = nil
+  -- end
   backend.save_npcs()
 end
 
 function backend.get_npc(npc_id)
   return npcs[npc_id]
+end
+
+function backend.get_npcs_obj(npc_id)
+  return npcs_objects[npc_id]
 end
 
 -- function backend.spawn_npc(ref)

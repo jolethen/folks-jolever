@@ -24,6 +24,7 @@ folks.default_npc = {
   -- on_activate = mobkit.actfunc,
   on_activate = function(self, staticdata, dtime_s)
     self._npc_object = self.object
+    minetest.log("ACtivated")
     -- minetest.log(dump(self._npc_object))
     if staticdata ~= nil then
       staticdata = minetest.deserialize(staticdata)
@@ -38,8 +39,10 @@ folks.default_npc = {
         self.object:set_properties({
           nametag = npc_data._npc_name,
           nametag_color = npc_data._npc_name_color,
+          textures = npc_data._npc_textures,
         })
         self._npc_id = self.memory._npc_id
+        folks.backend.get_npcs_objs()[self.memory._npc_id] = self.object
       end
     end
 

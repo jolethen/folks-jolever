@@ -35,6 +35,7 @@ minetest.register_tool("folks:npc_editor", {
         -- TODO: show formspec to edit clicked npc
         local meta = player:get_meta()
         meta:set_string("folks_editing_npc", entity._npc_id)
+        -- minetest.log(dump(entity._npc_object))
         minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", "You are now editing NPC: " .. entity._npc_id))
         -- minetest.log(entity._npc_id or "none")
       end
