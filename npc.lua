@@ -23,31 +23,32 @@ folks.default_npc = {
   on_step = mobkit.stepfunc,
   -- on_activate = mobkit.actfunc,
   on_activate = function(self, staticdata, dtime_s)
+    mobkit.actfunc(self, staticdata, dtime_s)
+
     self._npc_object = self.object
     minetest.log("ACtivated")
     -- minetest.log(dump(self._npc_object))
+    minetest.log(dump(mobkit.recall(self, "_npc_id")))
     if staticdata ~= nil then
       staticdata = minetest.deserialize(staticdata)
-      if staticdata._npc_id ~= nil then  -- saves _npc_id to memory so I can get it every time the entity is activated
-        self.memory = {}
-        self.memory._npc_id = staticdata._npc_id
-      else
-        self.memory = folks.util.deepcopy(staticdata.memory)
+      if mobkit.recall(self, "_npc_id") == nil then  -- saves _npc_id to memory so I can get it every time the entity is activated
+        mobkit.remember(self, "_npc_id", staticdata._npc_id)
+        minetest.log(dump(mobkit.recall(self, "_npc_id")))
+      -- else
+      --   self.memory = folks.util.deepcopy(staticdata.memory)
       end
-      local npc_data = folks.backend.get_npc(self.memory._npc_id)
+      local npc_id = mobkit.recall(self, "_npc_id")
+      local npc_data = folks.backend.get_npc(npc_id)
       if npc_data then  -- Here I set all the customizable properties
         self.object:set_properties({
           nametag = npc_data._npc_name,
           nametag_color = npc_data._npc_name_color,
           textures = npc_data._npc_textures,
         })
-        self._npc_id = self.memory._npc_id
-        folks.backend.get_npcs_objs()[self.memory._npc_id] = self.object
+        self._npc_id = npc_id
+        folks.backend.get_npcs_objs()[npc_id] = self.object
       end
     end
-
-
-    mobkit.actfunc(self, staticdata, dtime_s)
   end,
   get_staticdata = mobkit.statfunc,
   view_range = 24,
