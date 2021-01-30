@@ -8,7 +8,7 @@ folks.default_npc = {
     visual = "mesh",
     mesh = "npc.b3d",
     textures = {
-      {"npc.png"},
+      folks.default_npc_texture,
     },
     pushable = false,
     nametag = "Folk",
@@ -26,14 +26,14 @@ folks.default_npc = {
     mobkit.actfunc(self, staticdata, dtime_s)
 
     self._npc_object = self.object
-    minetest.log("ACtivated")
+    -- minetest.log("ACtivated")
     -- minetest.log(dump(self._npc_object))
-    minetest.log(dump(mobkit.recall(self, "_npc_id")))
+    -- minetest.log(dump(mobkit.recall(self, "_npc_id")))
     if staticdata ~= nil then
       staticdata = minetest.deserialize(staticdata)
       if mobkit.recall(self, "_npc_id") == nil then  -- saves _npc_id to memory so I can get it every time the entity is activated
         mobkit.remember(self, "_npc_id", staticdata._npc_id)
-        minetest.log(dump(mobkit.recall(self, "_npc_id")))
+        -- minetest.log(dump(mobkit.recall(self, "_npc_id")))
       -- else
       --   self.memory = folks.util.deepcopy(staticdata.memory)
       end
