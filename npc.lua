@@ -46,7 +46,7 @@ folks.default_npc = {
           textures = npc_data._npc_textures,
         })
         self._npc_id = npc_id
-        folks.backend.get_npcs_objs()[npc_id] = self.object
+        folks.backend.set_npc_obj(npc_id, self.object)
       end
     end
   end,
@@ -83,6 +83,7 @@ folks.default_npc = {
   _isfolk = true,
   _isremoved = false,
   _npc_object = nil,
+  _bound_player = nil,  -- nil or player name
 }
 
 

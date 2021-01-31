@@ -92,6 +92,45 @@ ChatCmdBuilder.new("folks", function(cmd)
   end)
 
 
+
+  -- command to bind name and texture of npc to a player, needs skins_collectible
+  cmd:sub("bind :name:text", function(pname, bind_to)
+    if folks.skins_c then
+      local player = minetest.get_player_by_name(pname)
+      if player then
+        local meta = player:get_meta()
+        if meta then
+          local editing_npc = meta:get_string("folks_editing_npc")
+          if editing_npc == "" then
+            minetest.chat_send_player(pname, minetest.colorize("#ff0000", "You are not editing an NPC. Click the NPC you want to edit with the NPC editor item."))
+            return
+          end
+          local npc = folks.backend.get_npc(editing_npc)
+          if npc then
+            local new_texture = skins_collectible.get_player_skin(bind_to).texture
+            folks.backend.get_npcs()[editing_npc]._npc_textures = {new_texture,}
+            folks.backend.get_npcs()[editing_npc]._npc_name = bind_to
+            folks.backend.get_npcs()[editing_npc]._bound_player = bind_to
+            -- minetest.log(dump(npc._npc_object))
+            local npc_obj = folks.backend.get_npcs_obj(editing_npc)
+            if npc_obj then
+              npc_obj:set_properties({
+                nametag = bind_to,
+                textures = {new_texture,},
+                _bound_player = bind_to,
+              })
+            end
+            meta:set_string("folks_editing_npc", "")
+            minetest.chat_send_player(pname, minetest.colorize("#00ff00", "Edited NPC: " .. editing_npc))
+          end
+        end
+      end
+    else
+      minetest.chat_send_player(pname, minetest.colorize("#ff0000", "You need skins_collectible to use this feature"))
+    end
+  end)
+
+
 end, {
   description = "Manage folks npcs",
   privs = {

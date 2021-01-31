@@ -2,6 +2,15 @@ folks = {}
 local version = "0.0.0-alpha"
 local modpath = minetest.get_modpath("folks")
 
+-- check for skins_collectible
+if minetest.get_modpath("skins_collectible") then
+  minetest.log("negro")
+  folks.skins_c = true
+else
+  minetest.log("asdd")
+
+  folks.skins_c = false
+end
 
 folks.util = dofile(modpath .. "/util.lua")
 
@@ -30,6 +39,14 @@ minetest.after(0, function()
   --   end
   -- end
 end)
+
+-- callback for skins_collectible
+if folks.skins_c then
+  skins_collectible.register_on_set_skin(function(p_name, skin_ID)
+    local texture = skins_collectible.get_skin(skin_ID)
+    folks.backend.update_npc_texture(p_name, texture.texture)
+  end)
+end
 
 minetest.register_on_shutdown(function()
   folks.backend.on_shutdown()
