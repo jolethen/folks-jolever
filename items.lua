@@ -27,7 +27,7 @@ minetest.register_tool("folks:npc_editor", {
   on_drop = function() end,
 
   on_use = function(itemstack, player, pointed_thing)
-    if pointed_thing.type == "nothing" then return end
+    if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk then
@@ -52,7 +52,7 @@ minetest.register_tool("folks:npc_remover", {
   on_drop = function() end,
 
   on_use = function(itemstack, player, pointed_thing)
-    if pointed_thing.type == "nothing" then return end
+    if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk and not entity._isremoved then
