@@ -28,9 +28,4 @@ function util.deepcopy(obj, seen)
 	return copy
 end
 
-
-
-
-
-
 return util

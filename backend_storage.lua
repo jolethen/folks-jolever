@@ -2,10 +2,15 @@ local storage = minetest.get_mod_storage()
 local backend = {}
 local npcs = {} -- id: obj
 local npcs_objects = {}
+local msg_for_players = {} -- npc_id: {p_name: msg_index}
 
 
 function backend.load_npcs()
   npcs =  minetest.deserialize(storage:get_string("npcs")) or {}
+  for npc_id, _ in pairs(npcs) do
+    msg_for_players[npc_id] = {}
+  end
+  minetest.log(dump(msg_for_players))
   return npcs
 end
 
@@ -79,6 +84,20 @@ function backend.update_npc_texture(p_name, texture)
       end
     end
   end
+end
+
+
+-- custom Messages
+function backend.get_next_message_index(npc_id, p_name)
+  if msg_for_players[npc_id][p_name] then
+    local id = msg_for_players[npc_id][p_name]
+    if id > #npcs[npc_id]._npc_messages then id = 1 end
+    msg_for_players[npc_id][p_name] = id + 1
+    return id
+  end
+
+  msg_for_players[npc_id][p_name] = 2  -- set the next id
+  return 1  -- if p_name is not found means it's the first message
 end
 
 -- function backend.spawn_npc(ref)

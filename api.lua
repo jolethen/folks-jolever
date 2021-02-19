@@ -59,10 +59,12 @@ function folks.edit_npc_messages(npc_id, messages)
   folks.backend.get_npcs()[npc_id]._npc_messages = messages
 end
 
-function folks.get_npc_message(npc_id)
+function folks.get_npc_message(npc_id, index)
   local npc = folks.backend.get_npc(npc_id)
 
   if npc then
-    return npc._npc_messages
+    if npc._npc_messages[index] == nil then return nil end
+
+    return npc._npc_messages[index]
   end
 end
