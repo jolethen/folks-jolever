@@ -48,7 +48,7 @@ if folks.skins_c then
 end
 
 minetest.register_on_shutdown(function()
-  folks.backend.on_shutdown()
+  folks.backend.save_npcs()
 end)
 
 minetest.log("action", "[FOLKS] Mod initialised. Running version " .. version)

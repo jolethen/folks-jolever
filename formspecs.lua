@@ -10,7 +10,7 @@ function folks.get_edit_formspec(npc_id)
       "field[2,2;3,0.75;folk_name;Folk name;", escape(npc._npc_name), "]",
       "field[6,2;3,0.75;folk_name_color;Folk Name Color;", escape(npc._npc_name_color), "]",
       "field[2,3.5;7,0.75;folk_texture;Folk Texture (with or without .png);", escape(table.concat(npc._npc_textures, "")), "]",
-      "textarea[2,5;7,4;folk_messages;Messages (every line is a message);Hey\\, I'm a Folk!]",
+      "textarea[2,5;7,4;folk_messages;Messages (every line is a message);", escape(npc._npc_messages), "]",
       "button_exit[4,9.5;3,0.75;folk_save_edit;Save]",
       "button_exit[9.5,0.2;1,0.75;folk_close_edit;X]",
     }
@@ -42,6 +42,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
           folks.edit_npc_name(editing_npc, fields.folk_name)
           folks.edit_npc_name_color(editing_npc, fields.folk_name_color)
           folks.edit_npc_texture(editing_npc, fields.folk_texture)
+          folks.edit_npc_messages(editing_npc, fields.folk_messages)
           meta:set_string("folks_editing_npc", "")
           minetest.chat_send_player(p_name, minetest.colorize("#00ff00", "Edited NPC: " .. editing_npc))
         end

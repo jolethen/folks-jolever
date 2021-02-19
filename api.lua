@@ -54,3 +54,15 @@ function folks.bind_npc_to_player(npc_id, bind_to)
 
   return true
 end
+
+function folks.edit_npc_messages(npc_id, messages)
+  folks.backend.get_npcs()[npc_id]._npc_messages = messages
+end
+
+function folks.get_npc_message(npc_id)
+  local npc = folks.backend.get_npc(npc_id)
+
+  if npc then
+    return npc._npc_messages
+  end
+end

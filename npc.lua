@@ -72,7 +72,8 @@ folks.default_npc = {
 
   on_rightclick = function(self, player)
     -- TODO: future logic for custom messages
-    minetest.chat_send_player(player:get_player_name(), "Yo che mi clicchi")
+    local msg = folks.get_npc_message(self._npc_id)
+    minetest.chat_send_player(player:get_player_name(), msg)
   end,
 
   on_punch = function(self, puncher, t_from_last, tool_cap, dir, dmg)
@@ -84,6 +85,7 @@ folks.default_npc = {
   _isremoved = false,
   _npc_object = nil,
   _bound_player = nil,  -- nil or player name
+  _npc_messages = "Hey, I'm a Folk!" -- TODO: will be a table with all the npc's messages
 }
 
 

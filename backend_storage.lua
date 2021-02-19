@@ -36,6 +36,7 @@ function backend.add_npc(ref)
   npc._npc_id = entity._npc_id
   npc._npc_type = entity.name
   npc._bound_player = entity._bound_player
+  npc._npc_messages = entity._npc_messages
 
   npcs[entity._npc_id] = npc
 
@@ -53,14 +54,6 @@ end
 
 function backend.save_npcs()
   storage:set_string("npcs", minetest.serialize(npcs))
-end
-
--- probably a better method exists but this is the only one I came up with
-function backend.on_shutdown()
-  -- for k,v in pairs(npcs) do
-  --   npcs[k]._npc_object = nil
-  -- end
-  backend.save_npcs()
 end
 
 function backend.get_npc(npc_id)
