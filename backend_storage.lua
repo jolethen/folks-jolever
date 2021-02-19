@@ -3,13 +3,6 @@ local backend = {}
 local npcs = {} -- id: obj
 local npcs_objects = {}
 
-function backend.set_string(key, value)
-  storage:set_string(key, minetest.serialize(value))
-end
-
-function backend.get_string(key)
-  return minetest.deserialize(storage:get_string(key))
-end
 
 function backend.load_npcs()
   npcs =  minetest.deserialize(storage:get_string("npcs")) or {}

@@ -38,6 +38,9 @@ minetest.register_tool("folks:npc_editor", {
         -- minetest.log(dump(entity._npc_object))
         minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", "You are now editing NPC: " .. entity._npc_id))
         -- minetest.log(entity._npc_id or "none")
+        -- formspec
+        minetest.show_formspec(player:get_player_name(), "folks:edit_npc_formspec", folks.get_edit_formspec(entity._npc_id))
+        -- end formspec
       end
     end
     return

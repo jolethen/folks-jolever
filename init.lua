@@ -4,11 +4,8 @@ local modpath = minetest.get_modpath("folks")
 
 -- check for skins_collectible
 if minetest.get_modpath("skins_collectible") then
-  minetest.log("negro")
   folks.skins_c = true
 else
-  minetest.log("asdd")
-
   folks.skins_c = false
 end
 
@@ -24,9 +21,11 @@ else
   return
 end
 
+dofile(modpath .. "/api.lua")
 dofile(modpath .. "/privs.lua")
 dofile(modpath .. "/chatcmdbuilder.lua")
 dofile(modpath .. "/commands.lua")
+dofile(modpath .. "/formspecs.lua")
 dofile(modpath .. "/items.lua")
 dofile(modpath .. "/npc.lua")
 
