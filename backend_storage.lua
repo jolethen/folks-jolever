@@ -10,7 +10,6 @@ function backend.load_npcs()
   for npc_id, _ in pairs(npcs) do
     msg_for_players[npc_id] = {}
   end
-  minetest.log(dump(msg_for_players))
   return npcs
 end
 
@@ -44,6 +43,8 @@ function backend.add_npc(ref)
   npc._npc_messages = entity._npc_messages
 
   npcs[entity._npc_id] = npc
+
+  msg_for_players[entity._npc_id] = {}
 
   -- that way I can serialize npcs without problems
   npcs_objects[entity._npc_id] = entity._npc_object
