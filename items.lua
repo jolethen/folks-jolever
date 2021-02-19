@@ -6,6 +6,8 @@ minetest.register_tool("folks:npc_spawner", {
   on_drop = function() end,
 
   on_use = function(itemstack, player, pointed_thing)
+    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+
     local npc_id = folks.backend.get_unique_id()
     local new_npc = minetest.add_entity(player:get_pos(), "folks:npc", minetest.serialize({_npc_id = npc_id}))
     if new_npc then
@@ -28,6 +30,7 @@ minetest.register_tool("folks:npc_editor", {
 
   on_use = function(itemstack, player, pointed_thing)
     if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
+    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk then
@@ -56,6 +59,7 @@ minetest.register_tool("folks:npc_remover", {
 
   on_use = function(itemstack, player, pointed_thing)
     if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
+    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk and not entity._isremoved then
