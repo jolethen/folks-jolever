@@ -63,8 +63,10 @@ minetest.register_tool("folks:npc_remover", {
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk and not entity._isremoved then
-      mobkit.hq_die(entity)
-      folks.backend.remove_npc(entity)
+      if folks.backend.get_npc(entity._npc_id) then
+        folks.backend.remove_npc(entity._npc_id)
+      end
+      pointed_thing.ref:remove()
       return
     else
       return

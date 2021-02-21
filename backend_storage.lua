@@ -51,9 +51,9 @@ function backend.add_npc(ref)
   backend.save_npcs()
 end
 
-function backend.remove_npc(ref)
-  npcs[ref._npc_id] = nil
-  npcs_objects[ref._npc_id] = nil
+function backend.remove_npc(npc_id)
+  npcs[npc_id] = nil
+  npcs_objects[npc_id] = nil
 
   backend.save_npcs()
 end
