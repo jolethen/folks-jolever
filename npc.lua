@@ -71,11 +71,11 @@ folks.default_npc = {
 
 
   on_rightclick = function(self, player)
-    -- TODO: future logic for custom messages
     local msg_index = folks.backend.get_next_message_index(self._npc_id, player:get_player_name())
     local msg = folks.get_npc_message(self._npc_id, msg_index)
     if msg then
-      minetest.chat_send_player(player:get_player_name(), msg)
+      local npc_name = folks.backend.get_npc(self._npc_id)._npc_name
+      minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", npc_name .. ": " .. msg))
     end
   end,
 
