@@ -1,6 +1,6 @@
-minetest.register_tool("folks:npc_spawner", {
-  description = "Use this to spawn a NPC  at your position",
-  inventory_image = "npc_spawner.png",
+minetest.register_tool("folks:npc_creator", {
+  description = "Use this to create a new NPC  at your position",
+  inventory_image = "npc_creator.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
   on_drop = function() end,
