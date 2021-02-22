@@ -64,12 +64,47 @@ minetest.register_tool("folks:npc_remover", {
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk and not entity._isremoved then
       if folks.backend.get_npc(entity._npc_id) then
+        for _, npc_obj in pairs(folks.backend.get_npcs_obj(entity._npc_id)) do
+          npc_obj:remove()
+        end
         folks.backend.remove_npc(entity._npc_id)
       end
-      pointed_thing.ref:remove()
       return
     else
       return
     end
+  end
+})
+
+minetest.register_tool("folks:npc_spawner", {
+  description = "Use this to spawn an NPC that you had already created",
+  inventory_image = "npc_spawner.png",
+  groups = {oddly_breakable_by_hand = "2"},
+  on_place = function() end,
+  on_drop = function() end,
+
+  on_use = function(itemstack, player, pointed_thing)
+    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+
+    minetest.show_formspec(player:get_player_name(), "folks:spawn_npc_formspec", folks.get_spawn_formspec())
+
+    return
+  end
+})
+
+minetest.register_tool("folks:npc_despawner", {
+  description = "Use this to despawn without deleting the NPC you click",
+  inventory_image = "npc_despawner.png",
+  groups = {oddly_breakable_by_hand = "2"},
+  on_place = function() end,
+  on_drop = function() end,
+
+  on_use = function(itemstack, player, pointed_thing)
+    if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
+    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+
+    pointed_thing.ref:remove()
+
+    return
   end
 })

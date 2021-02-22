@@ -1,7 +1,7 @@
 local storage = minetest.get_mod_storage()
 local backend = {}
 local npcs = {} -- id: obj
-local npcs_objects = {}
+local npcs_objects = {} -- id: {obj1, obj2}, more objects of the same NPC
 local msg_for_players = {} -- npc_id: {p_name: msg_index}
 
 
@@ -47,7 +47,7 @@ function backend.add_npc(ref)
   msg_for_players[entity._npc_id] = {}
 
   -- that way I can serialize npcs without problems
-  npcs_objects[entity._npc_id] = entity._npc_object
+  backend.set_npc_obj(entity._npc_id, entity._npc_object)
   backend.save_npcs()
 end
 
@@ -71,16 +71,22 @@ function backend.get_npcs_obj(npc_id)
 end
 
 function backend.set_npc_obj(npc_id, obj)
-  npcs_objects[npc_id] = obj
+  if not npcs_objects[npc_id] then
+    npcs_objects[npc_id] = {obj}
+  else
+    table.insert(npcs_objects[npc_id], obj)
+  end
 end
 
 function backend.update_npc_texture(p_name, texture)
   for npc_id, npc in pairs(npcs) do
     if npc._bound_player == p_name then
       if npcs_objects[npc_id] then
-        npcs_objects[npc_id]:set_properties({
-          textures = {texture,},
-        })
+        for _, npc_obj in pairs(npcs_objects[npc_id]) do
+          npc_obj:set_properties({
+            textures = {texture,},
+          })
+        end
         npcs[npc_id]._npc_textures = {texture}
       end
     end
