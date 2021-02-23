@@ -1,3 +1,5 @@
+local S = minetest.get_translator("folks")
+
 ChatCmdBuilder.new("folks", function(cmd)
   -- command for editing selected npc name
   cmd:sub("edit name :name:text", function(pname, new_name)
@@ -7,14 +9,14 @@ ChatCmdBuilder.new("folks", function(cmd)
       if meta then
         local editing_npc = meta:get_string("folks_editing_npc")
         if editing_npc == "" then
-          minetest.chat_send_player(pname, minetest.colorize("#ff0000", "You are not editing an NPC. Click the NPC you want to edit with the NPC editor item."))
+          minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
         end
         local npc = folks.backend.get_npc(editing_npc)
         if npc then
           folks.edit_npc_name(editing_npc, new_name)
           meta:set_string("folks_editing_npc", "")
-          minetest.chat_send_player(pname, minetest.colorize("#00ff00", "Edited NPC: " .. editing_npc))
+          minetest.chat_send_player(pname, minetest.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
         end
       end
     end
@@ -29,14 +31,14 @@ ChatCmdBuilder.new("folks", function(cmd)
       if meta then
         local editing_npc = meta:get_string("folks_editing_npc")
         if editing_npc == "" then
-          minetest.chat_send_player(pname, minetest.colorize("#ff0000", "You are not editing an NPC. Click the NPC you want to edit with the NPC editor item."))
+          minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
         end
         local npc = folks.backend.get_npc(editing_npc)
         if npc then
           folks.edit_npc_name_color(editing_npc, new_color)
           meta:set_string("folks_editing_npc", "")
-          minetest.chat_send_player(pname, minetest.colorize("#00ff00", "Edited NPC: " .. editing_npc))
+          minetest.chat_send_player(pname, minetest.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
         end
       end
     end
@@ -51,14 +53,14 @@ ChatCmdBuilder.new("folks", function(cmd)
       if meta then
         local editing_npc = meta:get_string("folks_editing_npc")
         if editing_npc == "" then
-          minetest.chat_send_player(pname, minetest.colorize("#ff0000", "You are not editing an NPC. Click the NPC you want to edit with the NPC editor item."))
+          minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
         end
         local npc = folks.backend.get_npc(editing_npc)
         if npc then
           folks.edit_npc_texture(editing_npc, new_texture)
           meta:set_string("folks_editing_npc", "")
-          minetest.chat_send_player(pname, minetest.colorize("#00ff00", "Edited NPC: " .. editing_npc))
+          minetest.chat_send_player(pname, minetest.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
         end
       end
     end
@@ -75,28 +77,28 @@ ChatCmdBuilder.new("folks", function(cmd)
         if meta then
           local editing_npc = meta:get_string("folks_editing_npc")
           if editing_npc == "" then
-            minetest.chat_send_player(pname, minetest.colorize("#ff0000", "You are not editing an NPC. Click the NPC you want to edit with the NPC editor item."))
+            minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
             return
           end
           local npc = folks.backend.get_npc(editing_npc)
           if npc then
             if folks.bind_npc_to_player(editing_npc, bind_to) then
-              minetest.chat_send_player(pname, minetest.colorize("#00ff00", "Edited NPC: " .. editing_npc))
+              minetest.chat_send_player(pname, minetest.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
             else
-              minetest.chat_send_player(pname, minetest.colorize("#ff0000", "Couldn't retrieve player texture (is it online?)"))
+              minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("Couldn't retrieve player texture (is it online?)")))
             end
             meta:set_string("folks_editing_npc", "")
           end
         end
       end
     else
-      minetest.chat_send_player(pname, minetest.colorize("#ff0000", "You need skins_collectible to use this feature"))
+      minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You need skins_collectible to use this feature")))
     end
   end)
 
 
 end, {
-  description = "Manage folks npcs",
+  description = S("Manage folks npcs"),
   privs = {
     folks_admin = true
   }

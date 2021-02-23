@@ -1,5 +1,5 @@
 folks = {}
-local version = "0.0.0-alpha"
+local version = "0.2.0"
 local modpath = minetest.get_modpath("folks")
 
 -- check for skins_collectible

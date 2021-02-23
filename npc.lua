@@ -1,3 +1,5 @@
+local S = minetest.get_translator("folks")
+
 folks.default_npc = {
   initial_properties = {
     hp_max = 9999,
@@ -75,7 +77,7 @@ folks.default_npc = {
     local msg = folks.get_npc_message(self._npc_id, msg_index)
     if msg then
       local npc_name = folks.backend.get_npc(self._npc_id)._npc_name
-      minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", npc_name .. ": " .. msg))
+      minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", npc_name .. ": " .. S(msg)))
     end
   end,
 

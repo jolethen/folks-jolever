@@ -1,5 +1,7 @@
+local S = minetest.get_translator("folks")
+
 minetest.register_tool("folks:npc_creator", {
-  description = "Use this to create a new NPC  at your position",
+  description = S("Use this to create a new NPC  at your position"),
   inventory_image = "npc_creator.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -22,7 +24,7 @@ minetest.register_tool("folks:npc_creator", {
 })
 
 minetest.register_tool("folks:npc_editor", {
-  description = "Use this to edit the NPC you click",
+  description = S("Use this to edit the NPC you click"),
   inventory_image = "npc_editor.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -39,7 +41,7 @@ minetest.register_tool("folks:npc_editor", {
         local meta = player:get_meta()
         meta:set_string("folks_editing_npc", entity._npc_id)
         -- minetest.log(dump(entity._npc_object))
-        minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", "You are now editing NPC: " .. entity._npc_id))
+        minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", S("You are now editing NPC: @1", entity._npc_id)))
         -- minetest.log(entity._npc_id or "none")
         -- formspec
         minetest.show_formspec(player:get_player_name(), "folks:edit_npc_formspec", folks.get_edit_formspec(entity._npc_id))
@@ -51,7 +53,7 @@ minetest.register_tool("folks:npc_editor", {
 })
 
 minetest.register_tool("folks:npc_remover", {
-  description = "Use this to remove the NPC you click",
+  description = S("Use this to remove the NPC you click"),
   inventory_image = "npc_remover.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -77,7 +79,7 @@ minetest.register_tool("folks:npc_remover", {
 })
 
 minetest.register_tool("folks:npc_spawner", {
-  description = "Use this to spawn an NPC that you had already created",
+  description = S("Use this to spawn an NPC that you had already created"),
   inventory_image = "npc_spawner.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -93,7 +95,7 @@ minetest.register_tool("folks:npc_spawner", {
 })
 
 minetest.register_tool("folks:npc_despawner", {
-  description = "Use this to despawn without deleting the NPC you click",
+  description = S("Use this to despawn without deleting the NPC you click"),
   inventory_image = "npc_despawner.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
