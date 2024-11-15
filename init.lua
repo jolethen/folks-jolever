@@ -2,7 +2,7 @@ folks = {}
 local version = "0.2.0"
 local modpath = minetest.get_modpath("folks")
 
--- check for collectible_skins 
+-- check for collectible_skins
 if minetest.get_modpath("collectible_skins") then
   folks.skins_c = true
 else
@@ -23,7 +23,6 @@ end
 
 dofile(modpath .. "/api.lua")
 dofile(modpath .. "/privs.lua")
-dofile(modpath .. "/chatcmdbuilder.lua")
 dofile(modpath .. "/commands.lua")
 dofile(modpath .. "/formspecs.lua")
 dofile(modpath .. "/items.lua")
