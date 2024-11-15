@@ -11,8 +11,8 @@ function folks.get_edit_formspec(npc_id)
       "label[4.85,1;", S("Edit Folk"), "]",
       "field[2,2;3,0.75;folk_name;", S("Folk name"), ";", escape(npc._npc_name), "]",
       "field[6,2;3,0.75;folk_name_color;", S("Folk Name Color"), ";", escape(npc._npc_name_color), "]",
-      "field[2,3.5;7,0.75;folk_texture;", S("Folk Texture (with or without .png)"), ";", escape(table.concat(npc._npc_textures)), "]",
-      "textarea[2,5;7,4;folk_messages;", S("Messages (every line is a message)"), ";", escape(table.concat(npc._npc_messages, "\n")), "]",
+      "field[2,3.5;7,0.75;folk_texture;", S("Folk Texture (with or without .png)"), ";", escape(table.concat(npc._npc_textures or {})), "]",
+      "textarea[2,5;7,4;folk_messages;", S("Messages (every line is a message)"), ";", escape(table.concat(npc._npc_messages or {}, "\n")), "]",
       "button_exit[4,9.5;3,0.75;folk_save_edit;", S("Save"), "]",
       "button_exit[9.5,0.2;1,0.75;folk_close_edit;X]",
     }

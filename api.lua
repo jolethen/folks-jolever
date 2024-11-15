@@ -39,10 +39,10 @@ function folks.edit_npc_texture(npc_id, new_texture)
   end
 end
 
--- needs skins_collectible
+-- needs collectible_skins
 -- returns false if couldn't retrieve player texture (ex. is offline)
 function folks.bind_npc_to_player(npc_id, bind_to)
-  local new_texture_obj = skins_collectible.get_player_skin(bind_to)
+  local new_texture_obj = collectible_skins.get_player_skin(bind_to)
   if new_texture_obj == nil then return false end
 
   local new_texture = new_texture_obj.texture

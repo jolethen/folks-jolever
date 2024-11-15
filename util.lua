@@ -8,7 +8,7 @@ end
 
 function util.randomString(length)
     if not length or length <= 0 then return '' end
-    math.randomseed(os.clock()^5)
+    --math.randomseed(os.clock()^5)
     return util.randomString(length - 1) .. charset[math.random(1, #charset)]
 end
 
