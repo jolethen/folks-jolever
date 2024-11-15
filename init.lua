@@ -1,6 +1,7 @@
 folks = {}
 local version = "0.2.0"
 local modpath = minetest.get_modpath("folks")
+local srcpath = modpath .. "/src"
 
 -- check for collectible_skins
 if minetest.get_modpath("collectible_skins") then
@@ -9,24 +10,24 @@ else
   folks.skins_c = false
 end
 
-folks.util = dofile(modpath .. "/util.lua")
+folks.util = dofile(srcpath .. "/util.lua")
 
 dofile(modpath .. "/settings.lua")
 if folks.backend_type == "storage" then
-  folks.backend = dofile(modpath .. "/backend_storage.lua")
+  folks.backend = dofile(srcpath .. "/backend_storage.lua")
 elseif folks.backend_type == "sqlite" then
-  folks.backend = dofile(modpath .. "/backend_sqlite.lua")
+  folks.backend = dofile(srcpath .. "/backend_sqlite.lua")
 else
   minetest.log("error", "[FOLKS] Invalid storage type")
   return
 end
 
-dofile(modpath .. "/api.lua")
-dofile(modpath .. "/privs.lua")
-dofile(modpath .. "/commands.lua")
-dofile(modpath .. "/formspecs.lua")
-dofile(modpath .. "/items.lua")
-dofile(modpath .. "/npc.lua")
+dofile(srcpath .. "/api.lua")
+dofile(srcpath .. "/commands.lua")
+dofile(srcpath .. "/formspecs.lua")
+dofile(srcpath .. "/items.lua")
+dofile(srcpath .. "/npc.lua")
+dofile(srcpath .. "/privs.lua")
 
 minetest.after(0, function()
   local npcs = folks.backend.load_npcs()
