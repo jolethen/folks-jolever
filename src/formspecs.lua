@@ -1,7 +1,7 @@
 local S = minetest.get_translator("folks")
 
 function folks.get_edit_formspec(npc_id)
-  local npc = folks.backend.get_npc(npc_id)
+  local npc = folks.get_npc(npc_id)
   local escape = minetest.formspec_escape
   local formspec = {}
   if npc then
@@ -24,7 +24,7 @@ end
 
 function folks.get_spawn_formspec()
   local escape = minetest.formspec_escape
-  local npcs = folks.backend.get_npcs()
+  local npcs = folks.get_npcs()
   local dropdown_items = {}
 
   for npc_id, npc in pairs(npcs) do
@@ -57,7 +57,7 @@ local function handle_edit_formspec(player, formname, fields)
           minetest.chat_send_player(p_name, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
         end
-        local npc = folks.backend.get_npc(editing_npc)
+        local npc = folks.get_npc(editing_npc)
         if npc then
           local msgs = string.split(fields.folk_messages, "\n")
           folks.edit_npc_name(editing_npc, fields.folk_name)
@@ -112,6 +112,4 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     handle_spawn_formspec(player, formname, fields)
     return
   end
-
-  return
 end)

@@ -13,14 +13,7 @@ end
 folks.util = dofile(srcpath .. "/util.lua")
 
 dofile(modpath .. "/settings.lua")
-if folks.backend_type == "storage" then
-  folks.backend = dofile(srcpath .. "/backend_storage.lua")
-elseif folks.backend_type == "sqlite" then
-  folks.backend = dofile(srcpath .. "/backend_sqlite.lua")
-else
-  minetest.log("error", "[FOLKS] Invalid storage type")
-  return
-end
+dofile(srcpath .. "/backend_storage.lua")
 
 dofile(srcpath .. "/api.lua")
 dofile(srcpath .. "/commands.lua")
@@ -30,11 +23,11 @@ dofile(srcpath .. "/npc.lua")
 dofile(srcpath .. "/privs.lua")
 
 minetest.after(0, function()
-  local npcs = folks.backend.load_npcs()
+  local npcs = folks.load_npcs()
   -- if npcs then
   --   for id, npc in pairs(npcs) do
   --     minetest.log("action", minetest.serialize(npc))
-  --     folks.backend.spawn_npc(npc)
+  --     folks.spawn_npc(npc)
   --   end
   -- end
 end)
@@ -43,12 +36,12 @@ end)
 if folks.skins_c then
   collectible_skins.register_on_set_skin(function(p_name, skin_ID)
     local texture = collectible_skins.get_skin(skin_ID)
-    folks.backend.update_npc_texture(p_name, texture.texture)
+    folks.update_npc_texture(p_name, texture.texture)
   end)
 end
 
 minetest.register_on_shutdown(function()
-  folks.backend.save_npcs()
+  folks.save_npcs()
 end)
 
 minetest.log("action", "[FOLKS] Mod initialised. Running version " .. version)

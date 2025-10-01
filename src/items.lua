@@ -10,16 +10,15 @@ minetest.register_tool("folks:npc_creator", {
   on_use = function(itemstack, player, pointed_thing)
     if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
-    local npc_id = folks.backend.get_unique_id()
+    local npc_id = folks.get_unique_id()
     local new_npc = minetest.add_entity(player:get_pos(), "folks:npc", minetest.serialize({_npc_id = npc_id}))
     if new_npc then
       local entity = new_npc:get_luaentity()
       if entity then
         entity._npc_id = npc_id
-        folks.backend.add_npc(new_npc)
+        folks.add_npc(new_npc)
       end
     end
-    return
   end
 })
 
@@ -48,7 +47,6 @@ minetest.register_tool("folks:npc_editor", {
         -- end formspec
       end
     end
-    return
   end
 })
 
@@ -65,15 +63,12 @@ minetest.register_tool("folks:npc_remover", {
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk and not entity._isremoved then
-      if folks.backend.get_npc(entity._npc_id) then
-        for _, npc_obj in pairs(folks.backend.get_npcs_obj(entity._npc_id)) do
+      if folks.get_npc(entity._npc_id) then
+        for _, npc_obj in pairs(folks.get_npc_objs(entity._npc_id)) do
           npc_obj:remove()
         end
-        folks.backend.remove_npc(entity._npc_id)
+        folks.remove_npc(entity._npc_id)
       end
-      return
-    else
-      return
     end
   end
 })
@@ -89,8 +84,6 @@ minetest.register_tool("folks:npc_spawner", {
     if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     minetest.show_formspec(player:get_player_name(), "folks:spawn_npc_formspec", folks.get_spawn_formspec())
-
-    return
   end
 })
 
@@ -106,7 +99,5 @@ minetest.register_tool("folks:npc_despawner", {
     if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     pointed_thing.ref:remove()
-
-    return
   end
 })

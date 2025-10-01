@@ -40,7 +40,7 @@ folks.default_npc = {
       --   self.memory = folks.util.deepcopy(staticdata.memory)
       end
       local npc_id = mobkit.recall(self, "_npc_id")
-      local npc_data = folks.backend.get_npc(npc_id)
+      local npc_data = folks.get_npc(npc_id)
       if npc_data then  -- Here I set all the customizable properties
         self.object:set_properties({
           nametag = npc_data._npc_name,
@@ -48,7 +48,7 @@ folks.default_npc = {
           textures = npc_data._npc_textures,
         })
         self._npc_id = npc_id
-        folks.backend.set_npc_obj(npc_id, self.object)
+        folks.set_npc_obj(npc_id, self.object)
       end
     end
   end,
@@ -73,10 +73,10 @@ folks.default_npc = {
 
 
   on_rightclick = function(self, player)
-    local msg_index = folks.backend.get_next_message_index(self._npc_id, player:get_player_name())
+    local msg_index = folks.get_next_message_index(self._npc_id, player:get_player_name())
     local msg = folks.get_npc_message(self._npc_id, msg_index)
     if msg then
-      local npc_name = folks.backend.get_npc(self._npc_id)._npc_name
+      local npc_name = folks.get_npc(self._npc_id)._npc_name
       minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", npc_name .. ": " .. S(msg)))
     end
   end,

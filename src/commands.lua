@@ -16,7 +16,7 @@ cmd:sub("edit name :name:text", function(pname, new_name)
         minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
         return
       end
-      local npc = folks.backend.get_npc(editing_npc)
+      local npc = folks.get_npc(editing_npc)
       if npc then
         folks.edit_npc_name(editing_npc, new_name)
         meta:set_string("folks_editing_npc", "")
@@ -38,7 +38,7 @@ cmd:sub("edit name_color :color:text", function(pname, new_color)
         minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
         return
       end
-      local npc = folks.backend.get_npc(editing_npc)
+      local npc = folks.get_npc(editing_npc)
       if npc then
         folks.edit_npc_name_color(editing_npc, new_color)
         meta:set_string("folks_editing_npc", "")
@@ -60,7 +60,7 @@ cmd:sub("edit texture :name:text", function(pname, new_texture)
         minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
         return
       end
-      local npc = folks.backend.get_npc(editing_npc)
+      local npc = folks.get_npc(editing_npc)
       if npc then
         folks.edit_npc_texture(editing_npc, new_texture)
         meta:set_string("folks_editing_npc", "")
@@ -84,7 +84,7 @@ cmd:sub("bind :name:text", function(pname, bind_to)
           minetest.chat_send_player(pname, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
         end
-        local npc = folks.backend.get_npc(editing_npc)
+        local npc = folks.get_npc(editing_npc)
         if npc then
           if folks.bind_npc_to_player(editing_npc, bind_to) then
             minetest.chat_send_player(pname, minetest.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
