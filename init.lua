@@ -13,7 +13,6 @@ end
 folks.util = dofile(srcpath .. "/util.lua")
 
 dofile(modpath .. "/settings.lua")
-dofile(srcpath .. "/backend_storage.lua")
 
 dofile(srcpath .. "/api.lua")
 dofile(srcpath .. "/commands.lua")
@@ -22,16 +21,6 @@ dofile(srcpath .. "/items.lua")
 dofile(srcpath .. "/npc.lua")
 dofile(srcpath .. "/privs.lua")
 
-core.after(0, function()
-  local npcs = folks.load_npcs()
-  -- if npcs then
-  --   for id, npc in pairs(npcs) do
-  --     core.log("action", core.serialize(npc))
-  --     folks.spawn_npc(npc)
-  --   end
-  -- end
-end)
-
 -- callback for collectible_skins
 if folks.skins_c then
   collectible_skins.register_on_set_skin(function(p_name, skin_ID)
@@ -39,9 +28,5 @@ if folks.skins_c then
     folks.update_npc_texture(p_name, texture.texture)
   end)
 end
-
-core.register_on_shutdown(function()
-  folks.save_npcs()
-end)
 
 core.log("action", "[FOLKS] Mod initialised. Running version " .. version)

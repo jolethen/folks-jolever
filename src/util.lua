@@ -6,12 +6,17 @@ local charset = {}  do -- [0-9a-zA-Z]
     for c = 97, 122 do table.insert(charset, string.char(c)) end
 end
 
+
+
 function util.randomString(length)
     if not length or length <= 0 then return '' end
     --math.randomseed(os.clock()^5)
     return util.randomString(length - 1) .. charset[math.random(1, #charset)]
 end
 
+
+
+-- mantiene le metatabelle, al contrario della funzione fornita da Luanti
 function util.deepcopy(obj, seen)
 	if type(obj) ~= 'table' then
 		return obj

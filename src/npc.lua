@@ -28,7 +28,7 @@ folks.default_npc = {
     mobkit.actfunc(self, staticdata, dtime_s)
 
     self._npc_object = self.object
-    -- core.log("ACtivated")
+    -- core.log("Activated")
     -- core.log(dump(self._npc_object))
     -- core.log(dump(mobkit.recall(self, "_npc_id")))
     if staticdata ~= nil then
@@ -48,7 +48,7 @@ folks.default_npc = {
           textures = npc_data._npc_textures,
         })
         self._npc_id = npc_id
-        folks.set_npc_obj(npc_id, self.object)
+        folks.set_npc_obj(npc_id, self.object) -- TODO: ha senso metterlo anche qui? Che in caso diventa funz locale in api.lua
       end
     end
   end,
