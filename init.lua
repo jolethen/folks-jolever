@@ -1,10 +1,10 @@
 folks = {}
 local version = "0.2.0"
-local modpath = minetest.get_modpath("folks")
+local modpath = core.get_modpath("folks")
 local srcpath = modpath .. "/src"
 
 -- check for collectible_skins
-if minetest.get_modpath("collectible_skins") then
+if core.get_modpath("collectible_skins") then
   folks.skins_c = true
 else
   folks.skins_c = false
@@ -22,11 +22,11 @@ dofile(srcpath .. "/items.lua")
 dofile(srcpath .. "/npc.lua")
 dofile(srcpath .. "/privs.lua")
 
-minetest.after(0, function()
+core.after(0, function()
   local npcs = folks.load_npcs()
   -- if npcs then
   --   for id, npc in pairs(npcs) do
-  --     minetest.log("action", minetest.serialize(npc))
+  --     core.log("action", core.serialize(npc))
   --     folks.spawn_npc(npc)
   --   end
   -- end
@@ -40,8 +40,8 @@ if folks.skins_c then
   end)
 end
 
-minetest.register_on_shutdown(function()
+core.register_on_shutdown(function()
   folks.save_npcs()
 end)
 
-minetest.log("action", "[FOLKS] Mod initialised. Running version " .. version)
+core.log("action", "[FOLKS] Mod initialised. Running version " .. version)

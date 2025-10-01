@@ -1,8 +1,8 @@
-local S = minetest.get_translator("folks")
+local S = core.get_translator("folks")
 
 function folks.get_edit_formspec(npc_id)
   local npc = folks.get_npc(npc_id)
-  local escape = minetest.formspec_escape
+  local escape = core.formspec_escape
   local formspec = {}
   if npc then
     formspec = {
@@ -23,7 +23,7 @@ end
 
 
 function folks.get_spawn_formspec()
-  local escape = minetest.formspec_escape
+  local escape = core.formspec_escape
   local npcs = folks.get_npcs()
   local dropdown_items = {}
 
@@ -47,14 +47,14 @@ end
 local function handle_edit_formspec(player, formname, fields)
   if fields.folk_save_edit then
     local p_name = player:get_player_name()
-    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+    if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     if player then
       local meta = player:get_meta()
       if meta then
         local editing_npc = meta:get_string("folks_editing_npc")
         if editing_npc == "" then
-          minetest.chat_send_player(p_name, minetest.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
+          core.chat_send_player(p_name, core.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
         end
         local npc = folks.get_npc(editing_npc)
@@ -65,7 +65,7 @@ local function handle_edit_formspec(player, formname, fields)
           folks.edit_npc_texture(editing_npc, fields.folk_texture)
           folks.edit_npc_messages(editing_npc, msgs)
           meta:set_string("folks_editing_npc", "")
-          minetest.chat_send_player(p_name, minetest.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
+          core.chat_send_player(p_name, core.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
         end
       end
     end
@@ -75,7 +75,7 @@ local function handle_edit_formspec(player, formname, fields)
     if player then
       local meta = player:get_meta()
       if meta then
-        minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", S("Exited from NPC: @1", meta:get_string("folks_editing_npc"))))
+        core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", S("Exited from NPC: @1", meta:get_string("folks_editing_npc"))))
         meta:set_string("folks_editing_npc", "")
       end
     end
@@ -86,23 +86,23 @@ end
 local function handle_spawn_formspec(player, formname, fields)
   if fields.folks_spawn_npc then
     local p_name = player:get_player_name()
-    if not minetest.check_player_privs(p_name, { folks_admin=true }) then return end
+    if not core.check_player_privs(p_name, { folks_admin=true }) then return end
 
     if fields.folks_select_npc ~= "" then
       local npc_id = string.split(fields.folks_select_npc, " - ")[2]
       if folks.spawn_npc(npc_id, player:get_pos()) then
-        minetest.chat_send_player(p_name, minetest.colorize("#00ff00", S("Spawned NPC: @1", npc_id)))
+        core.chat_send_player(p_name, core.colorize("#00ff00", S("Spawned NPC: @1", npc_id)))
         return
       end
     else
-      minetest.chat_send_player(p_name, minetest.colorize("#ff0000", S("No NPC selected")))
+      core.chat_send_player(p_name, core.colorize("#ff0000", S("No NPC selected")))
       return
     end
   end
 end
 
 
-minetest.register_on_player_receive_fields(function(player, formname, fields)
+core.register_on_player_receive_fields(function(player, formname, fields)
   if formname == "folks:edit_npc_formspec" then
     handle_edit_formspec(player, formname, fields)
     return

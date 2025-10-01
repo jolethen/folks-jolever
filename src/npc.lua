@@ -1,4 +1,4 @@
-local S = minetest.get_translator("folks")
+local S = core.get_translator("folks")
 
 folks.default_npc = {
   initial_properties = {
@@ -28,14 +28,14 @@ folks.default_npc = {
     mobkit.actfunc(self, staticdata, dtime_s)
 
     self._npc_object = self.object
-    -- minetest.log("ACtivated")
-    -- minetest.log(dump(self._npc_object))
-    -- minetest.log(dump(mobkit.recall(self, "_npc_id")))
+    -- core.log("ACtivated")
+    -- core.log(dump(self._npc_object))
+    -- core.log(dump(mobkit.recall(self, "_npc_id")))
     if staticdata ~= nil then
-      staticdata = minetest.deserialize(staticdata)
+      staticdata = core.deserialize(staticdata)
       if mobkit.recall(self, "_npc_id") == nil then  -- saves _npc_id to memory so I can get it every time the entity is activated
         mobkit.remember(self, "_npc_id", staticdata._npc_id)
-        -- minetest.log(dump(mobkit.recall(self, "_npc_id")))
+        -- core.log(dump(mobkit.recall(self, "_npc_id")))
       -- else
       --   self.memory = folks.util.deepcopy(staticdata.memory)
       end
@@ -77,12 +77,12 @@ folks.default_npc = {
     local msg = folks.get_npc_message(self._npc_id, msg_index)
     if msg then
       local npc_name = folks.get_npc(self._npc_id)._npc_name
-      minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", npc_name .. ": " .. S(msg)))
+      core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", npc_name .. ": " .. S(msg)))
     end
   end,
 
   on_punch = function(self, puncher, t_from_last, tool_cap, dir, dmg)
-    -- minetest.log("action", minetest.serialize(tool_cap))
+    -- core.log("action", core.serialize(tool_cap))
   end,
 
   -- custom properties
@@ -95,4 +95,4 @@ folks.default_npc = {
 
 
 
-minetest.register_entity("folks:npc", folks.default_npc)
+core.register_entity("folks:npc", folks.default_npc)

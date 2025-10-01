@@ -88,7 +88,7 @@ function folks.spawn_npc(npc_id, position)
   local npc = folks.get_npc(npc_id)
 
   if npc then
-    local spawned_npc = minetest.add_entity(position, "folks:npc", minetest.serialize({_npc_id = npc_id}))
+    local spawned_npc = core.add_entity(position, "folks:npc", core.serialize({_npc_id = npc_id}))
     if spawned_npc then
       local entity = spawned_npc:get_luaentity()
       if entity then

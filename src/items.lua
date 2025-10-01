@@ -1,6 +1,6 @@
-local S = minetest.get_translator("folks")
+local S = core.get_translator("folks")
 
-minetest.register_tool("folks:npc_creator", {
+core.register_tool("folks:npc_creator", {
   description = S("Use this to create a new NPC  at your position"),
   inventory_image = "npc_creator.png",
   groups = {oddly_breakable_by_hand = "2"},
@@ -8,10 +8,10 @@ minetest.register_tool("folks:npc_creator", {
   on_drop = function() end,
 
   on_use = function(itemstack, player, pointed_thing)
-    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+    if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     local npc_id = folks.get_unique_id()
-    local new_npc = minetest.add_entity(player:get_pos(), "folks:npc", minetest.serialize({_npc_id = npc_id}))
+    local new_npc = core.add_entity(player:get_pos(), "folks:npc", core.serialize({_npc_id = npc_id}))
     if new_npc then
       local entity = new_npc:get_luaentity()
       if entity then
@@ -22,7 +22,7 @@ minetest.register_tool("folks:npc_creator", {
   end
 })
 
-minetest.register_tool("folks:npc_editor", {
+core.register_tool("folks:npc_editor", {
   description = S("Use this to edit the NPC you click"),
   inventory_image = "npc_editor.png",
   groups = {oddly_breakable_by_hand = "2"},
@@ -31,7 +31,7 @@ minetest.register_tool("folks:npc_editor", {
 
   on_use = function(itemstack, player, pointed_thing)
     if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
-    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+    if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk then
@@ -39,18 +39,18 @@ minetest.register_tool("folks:npc_editor", {
         -- TODO: show formspec to edit clicked npc
         local meta = player:get_meta()
         meta:set_string("folks_editing_npc", entity._npc_id)
-        -- minetest.log(dump(entity._npc_object))
-        minetest.chat_send_player(player:get_player_name(), minetest.colorize("#00ff00", S("You are now editing NPC: @1", entity._npc_id)))
-        -- minetest.log(entity._npc_id or "none")
+        -- core.log(dump(entity._npc_object))
+        core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", S("You are now editing NPC: @1", entity._npc_id)))
+        -- core.log(entity._npc_id or "none")
         -- formspec
-        minetest.show_formspec(player:get_player_name(), "folks:edit_npc_formspec", folks.get_edit_formspec(entity._npc_id))
+        core.show_formspec(player:get_player_name(), "folks:edit_npc_formspec", folks.get_edit_formspec(entity._npc_id))
         -- end formspec
       end
     end
   end
 })
 
-minetest.register_tool("folks:npc_remover", {
+core.register_tool("folks:npc_remover", {
   description = S("Use this to remove the NPC you click"),
   inventory_image = "npc_remover.png",
   groups = {oddly_breakable_by_hand = "2"},
@@ -59,7 +59,7 @@ minetest.register_tool("folks:npc_remover", {
 
   on_use = function(itemstack, player, pointed_thing)
     if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
-    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+    if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     local entity = pointed_thing.ref:get_luaentity()
     if entity._isfolk and not entity._isremoved then
@@ -73,7 +73,7 @@ minetest.register_tool("folks:npc_remover", {
   end
 })
 
-minetest.register_tool("folks:npc_spawner", {
+core.register_tool("folks:npc_spawner", {
   description = S("Use this to spawn an NPC that you had already created"),
   inventory_image = "npc_spawner.png",
   groups = {oddly_breakable_by_hand = "2"},
@@ -81,13 +81,13 @@ minetest.register_tool("folks:npc_spawner", {
   on_drop = function() end,
 
   on_use = function(itemstack, player, pointed_thing)
-    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+    if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
-    minetest.show_formspec(player:get_player_name(), "folks:spawn_npc_formspec", folks.get_spawn_formspec())
+    core.show_formspec(player:get_player_name(), "folks:spawn_npc_formspec", folks.get_spawn_formspec())
   end
 })
 
-minetest.register_tool("folks:npc_despawner", {
+core.register_tool("folks:npc_despawner", {
   description = S("Use this to despawn without deleting the NPC you click"),
   inventory_image = "npc_despawner.png",
   groups = {oddly_breakable_by_hand = "2"},
@@ -96,7 +96,7 @@ minetest.register_tool("folks:npc_despawner", {
 
   on_use = function(itemstack, player, pointed_thing)
     if pointed_thing.type == "nothing" or pointed_thing.type == "node" then return end
-    if not minetest.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
+    if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     pointed_thing.ref:remove()
   end

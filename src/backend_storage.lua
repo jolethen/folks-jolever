@@ -1,11 +1,11 @@
-local storage = minetest.get_mod_storage()
+local storage = core.get_mod_storage()
 local npcs = {} -- id: obj
 local npcs_objects = {} -- id: {obj1, obj2}, more objects of the same NPC
 local msg_for_players = {} -- npc_id: {p_name: msg_index}
 
 
 function folks.load_npcs()
-  npcs =  minetest.deserialize(storage:get_string("npcs")) or {}
+  npcs =  core.deserialize(storage:get_string("npcs")) or {}
   for npc_id, _ in pairs(npcs) do
     msg_for_players[npc_id] = {}
   end
@@ -29,7 +29,7 @@ function folks.get_unique_id()
 end
 
 function folks.add_npc(ref)
-  local def = folks.util.deepcopy(minetest.registered_entities[ref:get_luaentity().name])
+  local def = folks.util.deepcopy(core.registered_entities[ref:get_luaentity().name])
   local npc = {}
   local entity = ref:get_luaentity()
   npc._npc_pos = ref:get_pos()
@@ -58,7 +58,7 @@ function folks.remove_npc(npc_id)
 end
 
 function folks.save_npcs()
-  storage:set_string("npcs", minetest.serialize(npcs))
+  storage:set_string("npcs", core.serialize(npcs))
 end
 
 function folks.get_npc(npc_id)
@@ -107,7 +107,7 @@ function folks.get_next_message_index(npc_id, p_name)
 end
 
 -- function folks.spawn_npc(ref)
---   local obj = minetest.add_entity(ref._npc_pos, ref._npc_type)
+--   local obj = core.add_entity(ref._npc_pos, ref._npc_type)
 --   local npc = obj:get_properties()
 --   npc._npc_pos = ref._npc_pos
 --   npc._npc_textures = ref._npc_textures or npc.initial_properties.textures
@@ -120,10 +120,10 @@ end
 --
 -- end
 --
--- function backend.despawn_npc(ref)
+-- function folks.despawn_npc(ref)
 --   local npc = npcs[ref._npc_id]
 --   npc._npc_object:remove()
 --
 --   npcs[ref._npc_id]["_npc_object"] = "heyo"
---   minetest.log("Despawning: " .. ref._npc_id)
+--   core.log("Despawning: " .. ref._npc_id)
 -- end
