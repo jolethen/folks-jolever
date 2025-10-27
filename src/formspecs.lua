@@ -52,7 +52,7 @@ local function handle_edit_formspec(player, formname, fields)
     if player then
       local meta = player:get_meta()
       if meta then
-        local editing_npc = meta:get_string("folks_editing_npc")
+        local editing_npc = meta:get_int("folks_editing_npc")
         if editing_npc == "" then
           core.chat_send_player(p_name, core.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
@@ -64,7 +64,7 @@ local function handle_edit_formspec(player, formname, fields)
           folks.edit_npc_name_color(editing_npc, fields.folk_name_color)
           folks.edit_npc_texture(editing_npc, fields.folk_texture)
           folks.edit_npc_messages(editing_npc, msgs)
-          meta:set_string("folks_editing_npc", "")
+          meta:set_int("folks_editing_npc", 0)
           core.chat_send_player(p_name, core.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
         end
       end
@@ -75,8 +75,8 @@ local function handle_edit_formspec(player, formname, fields)
     if player then
       local meta = player:get_meta()
       if meta then
-        core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", S("Exited from NPC: @1", meta:get_string("folks_editing_npc"))))
-        meta:set_string("folks_editing_npc", "")
+        core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", S("Exited from NPC: @1", meta:get_int("folks_editing_npc"))))
+        meta:set_int("folks_editing_npc", 0)
       end
     end
   end
