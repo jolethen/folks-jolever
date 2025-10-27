@@ -9,16 +9,7 @@ core.register_tool("folks:npc_creator", {
 
   on_use = function(itemstack, player, pointed_thing)
     if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
-
-    local npc_id = folks.get_unique_id()
-    local new_npc = core.add_entity(player:get_pos(), "folks:npc", core.serialize({_npc_id = npc_id}))
-    if new_npc then
-      local entity = new_npc:get_luaentity()
-      if entity then
-        entity._npc_id = npc_id
-        folks.add_npc(new_npc)
-      end
-    end
+    folks.add_npc(player:get_pos())
   end
 })
 

@@ -33,11 +33,18 @@ end)
 ---------------------CORE---------------------
 ----------------------------------------------
 
-function folks.add_npc(ref)
-  local def = folks.util.deepcopy(core.registered_entities[ref:get_luaentity().name])
+function folks.add_npc(pos)
+  local npc_id = folks.get_unique_id() -- TODO: questa va convertita in ID incrementali come arene di arena_lib.
+                                        -- Inoltre va usato GUID per tenere traccia in qualche modo (ID <-> GUID ?)
+  local new_npc = core.add_entity(pos, "folks:npc", core.serialize({_npc_id = npc_id}))
+
+  new_npc:get_luaentity()._npc_id = npc_id
+
+  local entity = new_npc:get_luaentity()
+  local def = folks.util.deepcopy(core.registered_entities[entity.name])
   local npc = {}
-  local entity = ref:get_luaentity()
-  npc._npc_pos = ref:get_pos()
+
+  npc._npc_pos = new_npc:get_pos()
   npc._npc_textures = entity.textures or def.initial_properties.textures
   npc._npc_name = entity._npc_name or def.initial_properties.nametag
   npc._npc_name_color = entity._npc_name_color or def.initial_properties.nametag_color
@@ -66,7 +73,9 @@ end
 
 function folks.edit_npc_name(npc_id, new_name)
   folks.get_npc(npc_id)._npc_name = new_name
+
   local npc_objs = folks.get_npc_objs(npc_id)
+
   for _, npc_obj in pairs(npc_objs) do
     if npc_obj then
       npc_obj:set_properties({nametag = new_name})
@@ -166,19 +175,15 @@ function folks.spawn_npc(npc_id, position)
     local spawned_npc = core.add_entity(position, "folks:npc", core.serialize({_npc_id = npc_id}))
     if spawned_npc then
       local entity = spawned_npc:get_luaentity()
-      if entity then
-        entity._npc_id = npc_id
-        folks.edit_npc_name(npc_id, npc._npc_name)
-        folks.edit_npc_name_color(npc_id, npc._npc_name_color)
-        folks.edit_npc_texture(npc_id, table.concat(npc._npc_textures))
-        folks.edit_npc_messages(npc_id, npc._npc_messages)
-        folks.set_npc_obj(spawned_npc)
-        return true
-      end
+      entity._npc_id = npc_id
+      folks.edit_npc_name(npc_id, npc._npc_name)
+      folks.edit_npc_name_color(npc_id, npc._npc_name_color)
+      folks.edit_npc_texture(npc_id, table.concat(npc._npc_textures))
+      folks.edit_npc_messages(npc_id, npc._npc_messages)
+      folks.set_npc_obj(spawned_npc)
+      return true
     end
   end
-
-  return false
 end
 
 
