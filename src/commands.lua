@@ -9,6 +9,18 @@ local cmd = chatcmdbuilder.register("folks", {
 
 
 
+cmd:sub("add :id:number", function(sender, id)
+  local p_pos = core.get_player_by_name(sender):get_pos()
+
+  if not folks.get_npc(id) then
+    folks.add_npc(p_pos, id)
+  else
+    folks.spawn_npc(id, p_pos)
+  end
+end)
+
+
+
 cmd:sub("list", function(sender)
   local name_list = ""
 

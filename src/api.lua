@@ -67,9 +67,13 @@ end)
 ---------------------CORE---------------------
 ----------------------------------------------
 
-function folks.add_npc(pos)
+function folks.add_npc(pos, id)
   -- TODO: in futuro possibilità di specificare manualmente ID (verificando che non sia già preso)
-  local npc_id = generate_id()
+  if id ~= nil then
+    if type(id) ~= "number" or npcs[id] ~= nil then return end
+  end
+
+  local npc_id = id or generate_id()
   local new_npc = core.add_entity(pos, "folks:npc", core.serialize({_npc_id = npc_id}))
 
   new_npc:get_luaentity()._npc_id = npc_id
@@ -95,6 +99,8 @@ function folks.add_npc(pos)
   -- that way I can serialize npcs without problems
   folks.set_npc_obj(entity._npc_id, entity._npc_object)
   update_storage()
+
+  return true
 end
 
 function folks.remove_npc(npc_id)
@@ -208,17 +214,19 @@ function folks.spawn_npc(npc_id, position)
 
   if npc then
     local spawned_npc = core.add_entity(position, "folks:npc", core.serialize({_npc_id = npc_id}))
-    if spawned_npc then
-      local entity = spawned_npc:get_luaentity()
-      entity._npc_id = npc_id
-      folks.edit_npc_name(npc_id, npc._npc_name)
-      folks.edit_npc_name_color(npc_id, npc._npc_name_color)
-      folks.edit_npc_texture(npc_id, table.concat(npc._npc_textures))
-      folks.edit_npc_messages(npc_id, npc._npc_messages)
-      mobkit.remember(entity, "_npc_id", npc_id)
-      folks.set_npc_obj(npc_id, spawned_npc)
-      return true
-    end
+    local entity = spawned_npc:get_luaentity()
+
+    entity._npc_id = npc_id
+    spawned_npc:set_properties({
+      textures = {table.concat(npc._npc_textures)},
+      nametag = npc._npc_name,
+      nametag_color = npc._npc_name_color
+    })
+
+    folks.set_npc_obj(npc_id, spawned_npc)
+    folks.edit_npc_messages(npc_id, npc._npc_messages)
+    mobkit.remember(entity, "_npc_id", npc_id)
+    return true
   end
 end
 

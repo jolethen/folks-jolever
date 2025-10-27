@@ -89,7 +89,7 @@ local function handle_spawn_formspec(player, formname, fields)
     if not core.check_player_privs(p_name, { folks_admin=true }) then return end
 
     if fields.folks_select_npc ~= "" then
-      local npc_id = string.split(fields.folks_select_npc, " - ")[2]
+      local npc_id = tonumber(string.split(fields.folks_select_npc, " - ")[2])
       if folks.spawn_npc(npc_id, player:get_pos()) then
         core.chat_send_player(p_name, core.colorize("#00ff00", S("Spawned NPC: @1", npc_id)))
         return
