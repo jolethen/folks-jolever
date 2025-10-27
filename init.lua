@@ -3,13 +3,6 @@ local version = "0.2.0"
 local modpath = core.get_modpath("folks")
 local srcpath = modpath .. "/src"
 
--- check for collectible_skins
-if core.get_modpath("collectible_skins") then
-  folks.skins_c = true
-else
-  folks.skins_c = false
-end
-
 folks.util = dofile(srcpath .. "/util.lua")
 
 dofile(modpath .. "/settings.lua")
@@ -22,7 +15,7 @@ dofile(srcpath .. "/npc.lua")
 dofile(srcpath .. "/privs.lua")
 
 -- callback for collectible_skins
-if folks.skins_c then
+if core.get_modpath("collectible_skins") then
   collectible_skins.register_on_set_skin(function(p_name, skin_ID)
     local texture = collectible_skins.get_skin(skin_ID)
     folks.update_npc_texture(p_name, texture.texture)
