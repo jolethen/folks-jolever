@@ -8,6 +8,18 @@ local cmd = chatcmdbuilder.register("folks", {
 })
 
 
+
+cmd:sub("list", function(sender)
+  local name_list = ""
+
+  for id, npc in pairs(folks.get_npcs()) do
+    name_list = name_list .. id .. ". " .. npc._npc_name .. "\n"
+  end
+
+  core.chat_send_player(sender, name_list)
+end)
+
+
 -- command for editing selected npc name
 cmd:sub("edit name :name:text", function(pname, new_name)
   local player = core.get_player_by_name(pname)
