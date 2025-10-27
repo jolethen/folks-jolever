@@ -26,6 +26,7 @@ local function convert_old_format_npcs()
 
   for npc_id, npc in pairs(npcs) do
     new_npcs[i] = folks.util.deepcopy(npc)
+    new_npcs[i]._npc_id = i
     converted_old_npcs[npc_id] = i
     i = i + 1
   end
