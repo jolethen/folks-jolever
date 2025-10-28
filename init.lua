@@ -1,5 +1,5 @@
 folks = {}
-local version = "0.2.0"
+local version = "0.3.0"
 local modpath = core.get_modpath("folks")
 local srcpath = modpath .. "/src"
 
