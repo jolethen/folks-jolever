@@ -29,7 +29,7 @@ core.register_tool("folks:npc_editor", {
       if mobkit.is_alive(entity) and not entity._isremoved then
         -- TODO: show formspec to edit clicked npc
         local meta = player:get_meta()
-        meta:set_string("folks_editing_npc", entity._npc_id)
+        meta:set_int("folks_editing_npc", entity._npc_id)
         -- core.log(dump(entity._npc_object))
         core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", S("You are now editing NPC: @1", entity._npc_id)))
         -- core.log(entity._npc_id or "none")

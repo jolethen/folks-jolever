@@ -8,13 +8,37 @@ local cmd = chatcmdbuilder.register("folks", {
 })
 
 
+
+cmd:sub("add :id:number", function(sender, id)
+  local p_pos = core.get_player_by_name(sender):get_pos()
+
+  if not folks.get_npc(id) then
+    folks.add_npc(p_pos, id)
+  else
+    folks.spawn_npc(id, p_pos)
+  end
+end)
+
+
+
+cmd:sub("list", function(sender)
+  local name_list = ""
+
+  for id, npc in pairs(folks.get_npcs()) do
+    name_list = name_list .. id .. ". " .. npc._npc_name .. "\n"
+  end
+
+  core.chat_send_player(sender, name_list)
+end)
+
+
 -- command for editing selected npc name
 cmd:sub("edit name :name:text", function(pname, new_name)
   local player = core.get_player_by_name(pname)
   if player then
     local meta = player:get_meta()
     if meta then
-      local editing_npc = meta:get_string("folks_editing_npc")
+      local editing_npc = meta:get_int("folks_editing_npc")
       if editing_npc == "" then
         core.chat_send_player(pname, core.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
         return
@@ -22,7 +46,7 @@ cmd:sub("edit name :name:text", function(pname, new_name)
       local npc = folks.get_npc(editing_npc)
       if npc then
         folks.edit_npc_name(editing_npc, new_name)
-        meta:set_string("folks_editing_npc", "")
+        meta:set_int("folks_editing_npc", 0)
         core.chat_send_player(pname, core.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
       end
     end
@@ -36,7 +60,7 @@ cmd:sub("edit name_color :color:text", function(pname, new_color)
   if player then
     local meta = player:get_meta()
     if meta then
-      local editing_npc = meta:get_string("folks_editing_npc")
+      local editing_npc = meta:get_int("folks_editing_npc")
       if editing_npc == "" then
         core.chat_send_player(pname, core.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
         return
@@ -44,7 +68,7 @@ cmd:sub("edit name_color :color:text", function(pname, new_color)
       local npc = folks.get_npc(editing_npc)
       if npc then
         folks.edit_npc_name_color(editing_npc, new_color)
-        meta:set_string("folks_editing_npc", "")
+        meta:set_int("folks_editing_npc", 0)
         core.chat_send_player(pname, core.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
       end
     end
@@ -58,7 +82,7 @@ cmd:sub("edit texture :name:text", function(pname, new_texture)
   if player then
     local meta = player:get_meta()
     if meta then
-      local editing_npc = meta:get_string("folks_editing_npc")
+      local editing_npc = meta:get_int("folks_editing_npc")
       if editing_npc == "" then
         core.chat_send_player(pname, core.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
         return
@@ -66,7 +90,7 @@ cmd:sub("edit texture :name:text", function(pname, new_texture)
       local npc = folks.get_npc(editing_npc)
       if npc then
         folks.edit_npc_texture(editing_npc, new_texture)
-        meta:set_string("folks_editing_npc", "")
+        meta:set_int("folks_editing_npc", 0)
         core.chat_send_player(pname, core.colorize("#00ff00", S("Edited NPC: @1", editing_npc)))
       end
     end
@@ -82,7 +106,7 @@ cmd:sub("bind :name:text", function(pname, bind_to)
     if player then
       local meta = player:get_meta()
       if meta then
-        local editing_npc = meta:get_string("folks_editing_npc")
+        local editing_npc = meta:get_int("folks_editing_npc")
         if editing_npc == "" then
           core.chat_send_player(pname, core.colorize("#ff0000", S("You are not editing an NPC. Click the NPC you want to edit with the NPC editor item.")))
           return
@@ -94,7 +118,7 @@ cmd:sub("bind :name:text", function(pname, bind_to)
           else
             core.chat_send_player(pname, core.colorize("#ff0000", S("Couldn't retrieve player texture (is it online?)")))
           end
-          meta:set_string("folks_editing_npc", "")
+          meta:set_int("folks_editing_npc", 0)
         end
       end
     end

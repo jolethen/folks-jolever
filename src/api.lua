@@ -1,16 +1,50 @@
 local storage = core.get_mod_storage()
 
+local function generate_id() end
 local function update_storage() end
 
 local npcs = {} -- id: obj
-local npcs_objects = {} -- id: {obj1, obj2}, more objects of the same NPC
+local npcs_objects = {} -- id: {obj1, obj2}, more objects of the same NPC. Caricata dai singoli PNG all'attivazione tramite set_npc_obj
 local msg_for_players = {} -- npc_id: {p_name: msg_index}
+local converted_old_npcs = {} -- npc_old_id: npc_id
+
+
+-- non esporre
+local function convert_old_format_npcs()
+  local to_convert = false
+
+  for npc_id, _ in pairs(npcs) do
+    if type(npc_id) ~= "number" then
+      to_convert = true
+    end
+    break
+  end
+
+  if not to_convert then return end
+
+  local new_npcs, i = {}, 1
+
+  for npc_id, npc in pairs(npcs) do
+    new_npcs[i] = folks.util.deepcopy(npc)
+    new_npcs[i]._npc_id = i
+    converted_old_npcs[npc_id] = i
+    i = i + 1
+  end
+
+  npcs = new_npcs
+  update_storage()
+
+  core.log("action", "[Folks] NPCs successfully converted into the new format")
+end
 
 
 
 -- non esporre
 local function load_npcs()
   npcs =  core.deserialize(storage:get_string("npcs")) or {}
+
+  convert_old_format_npcs()
+
   for npc_id, _ in pairs(npcs) do
     msg_for_players[npc_id] = {}
   end
@@ -33,9 +67,13 @@ end)
 ---------------------CORE---------------------
 ----------------------------------------------
 
-function folks.add_npc(pos)
-  local npc_id = folks.get_unique_id() -- TODO: questa va convertita in ID incrementali come arene di arena_lib.
-                                        -- Inoltre va usato GUID per tenere traccia in qualche modo (ID <-> GUID ?)
+function folks.add_npc(pos, id)
+  -- TODO: in futuro possibilità di specificare manualmente ID (verificando che non sia già preso)
+  if id ~= nil then
+    if type(id) ~= "number" or npcs[id] ~= nil then return end
+  end
+
+  local npc_id = id or generate_id()
   local new_npc = core.add_entity(pos, "folks:npc", core.serialize({_npc_id = npc_id}))
 
   new_npc:get_luaentity()._npc_id = npc_id
@@ -56,10 +94,13 @@ function folks.add_npc(pos)
   npcs[entity._npc_id] = npc
 
   msg_for_players[entity._npc_id] = {}
+  mobkit.remember(entity, "_npc_id", npc_id)
 
   -- that way I can serialize npcs without problems
   folks.set_npc_obj(entity._npc_id, entity._npc_object)
   update_storage()
+
+  return true
 end
 
 function folks.remove_npc(npc_id)
@@ -173,16 +214,19 @@ function folks.spawn_npc(npc_id, position)
 
   if npc then
     local spawned_npc = core.add_entity(position, "folks:npc", core.serialize({_npc_id = npc_id}))
-    if spawned_npc then
-      local entity = spawned_npc:get_luaentity()
-      entity._npc_id = npc_id
-      folks.edit_npc_name(npc_id, npc._npc_name)
-      folks.edit_npc_name_color(npc_id, npc._npc_name_color)
-      folks.edit_npc_texture(npc_id, table.concat(npc._npc_textures))
-      folks.edit_npc_messages(npc_id, npc._npc_messages)
-      folks.set_npc_obj(spawned_npc)
-      return true
-    end
+    local entity = spawned_npc:get_luaentity()
+
+    entity._npc_id = npc_id
+    spawned_npc:set_properties({
+      textures = {table.concat(npc._npc_textures)},
+      nametag = npc._npc_name,
+      nametag_color = npc._npc_name_color
+    })
+
+    folks.set_npc_obj(npc_id, spawned_npc)
+    folks.edit_npc_messages(npc_id, npc._npc_messages)
+    mobkit.remember(entity, "_npc_id", npc_id)
+    return true
   end
 end
 
@@ -193,6 +237,12 @@ end
 ----------------------------------------------
 --------------------UTILS---------------------
 ----------------------------------------------
+
+-- non esporre
+function folks.migrate_npc_id(entity, npc_id)
+  npc_id = converted_old_npcs[npc_id]
+  mobkit.remember(entity, "_npc_id", npc_id)
+end
 
 
 
@@ -222,16 +272,6 @@ end
 
 function folks.get_npc_objs(npc_id)
   return npcs_objects[npc_id]
-end
-
-
-
-function folks.get_unique_id()
-  local id
-  repeat
-    id = folks.util.randomString(16)
-  until npcs[id] == nil
-  return id
 end
 
 
@@ -268,7 +308,7 @@ end
 -----------------SETTERS----------------------
 ----------------------------------------------
 
--- non esporre?
+-- non esporre
 function folks.set_npc_obj(npc_id, obj)
   if not npcs_objects[npc_id] then
     npcs_objects[npc_id] = {obj}
@@ -284,6 +324,16 @@ end
 ----------------------------------------------
 ---------------FUNZIONI LOCALI----------------
 ----------------------------------------------
+
+function generate_id()
+  for i = 1, 9999 do
+    if npcs[i] == nil then
+      return i
+    end
+  end
+end
+
+
 
 function update_storage()
   storage:set_string("npcs", core.serialize(npcs))

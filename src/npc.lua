@@ -13,7 +13,7 @@ folks.default_npc = {
       folks.default_npc_texture,
     },
     pushable = false,
-    nametag = "Folk",
+    nametag = S("Folk"),
     nametag_color = "#ffffff",
   },
 
@@ -23,24 +23,20 @@ folks.default_npc = {
   buoyancy = -1,
   lung_capacity = 200,
   on_step = mobkit.stepfunc,
-  -- on_activate = mobkit.actfunc,
   on_activate = function(self, staticdata, dtime_s)
     mobkit.actfunc(self, staticdata, dtime_s)
 
     self._npc_object = self.object
-    -- core.log("Activated")
-    -- core.log(dump(self._npc_object))
-    -- core.log(dump(mobkit.recall(self, "_npc_id")))
+    -- TODO: non penso staticdata possa mai essere nil, usando mobkit.remember quando li fo nascere
     if staticdata ~= nil then
-      staticdata = core.deserialize(staticdata)
-      if mobkit.recall(self, "_npc_id") == nil then  -- saves _npc_id to memory so I can get it every time the entity is activated
-        mobkit.remember(self, "_npc_id", staticdata._npc_id)
-        -- core.log(dump(mobkit.recall(self, "_npc_id")))
-      -- else
-      --   self.memory = folks.util.deepcopy(staticdata.memory)
-      end
       local npc_id = mobkit.recall(self, "_npc_id")
+
+      if type(npc_id) ~= "number" then
+        folks.migrate_npc_id(self, npc_id)
+      end
+
       local npc_data = folks.get_npc(npc_id)
+
       if npc_data then  -- Here I set all the customizable properties
         self.object:set_properties({
           nametag = npc_data._npc_name,
@@ -48,10 +44,11 @@ folks.default_npc = {
           textures = npc_data._npc_textures,
         })
         self._npc_id = npc_id
-        folks.set_npc_obj(npc_id, self.object) -- TODO: ha senso metterlo anche qui? Che in caso diventa funz locale in api.lua
+        folks.set_npc_obj(npc_id, self.object)
       end
     end
   end,
+
   get_staticdata = mobkit.statfunc,
   view_range = 24,
   max_speed = 10,
@@ -79,10 +76,6 @@ folks.default_npc = {
       local npc_name = folks.get_npc(self._npc_id)._npc_name
       core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", npc_name .. ": " .. S(msg)))
     end
-  end,
-
-  on_punch = function(self, puncher, t_from_last, tool_cap, dir, dmg)
-    -- core.log("action", core.serialize(tool_cap))
   end,
 
   -- custom properties
