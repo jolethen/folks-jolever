@@ -25,7 +25,7 @@ core.register_tool("folks:npc_editor", {
     if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     local entity = pointed_thing.ref:get_luaentity()
-    if entity._isfolk then
+    if entity and entity._isfolk then
       if mobkit.is_alive(entity) and not entity._isremoved then
         -- TODO: show formspec to edit clicked npc
         local meta = player:get_meta()
@@ -53,7 +53,7 @@ core.register_tool("folks:npc_remover", {
     if not core.check_player_privs(player:get_player_name(), { folks_admin=true }) then return end
 
     local entity = pointed_thing.ref:get_luaentity()
-    if entity._isfolk and not entity._isremoved then
+    if entity and entity._isfolk and not entity._isremoved then
       if folks.get_npc(entity._npc_id) then
         for _, npc_obj in pairs(folks.get_npc_objs(entity._npc_id)) do
           npc_obj:remove()
