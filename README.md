@@ -4,7 +4,7 @@ This mod was left unfinished. It's now being maintained by the A.E.S. server, bu
 Check the [forum thread](https://forum.minetest.net/viewtopic.php?f=9&t=26121&p=389081#p389081) for more info.
 
 ## Commands
-Do `/arenas help` to print all the subcommands
+Do `/folks help` to print all the subcommands
 
 ## Texture
 The folks_default.png was made by [Zughy](https://content.minetest.net/users/Zughy/)
