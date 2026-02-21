@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Luanti Mod\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-21 16:57+0100\n"
+"POT-Creation-Date: 2026-02-21 17:42+0100\n"
 "PO-Revision-Date: 2026-02-21 15:57+0000\n"
 "Language: folks.it\n"
 "MIME-Version: 1.0\n"
@@ -20,7 +20,7 @@ msgid ""
 "editor item."
 msgstr ""
 "Non stai modificando nessun PNG. Clicca il PNG che vuoi modificare con "
-"l'oggetto editor PNG."
+"l'oggetto Editor Omini."
 
 #: src/commands.lua:51 src/commands.lua:73 src/commands.lua:95
 #: src/commands.lua:118 src/formspecs.lua:68
@@ -47,7 +47,8 @@ msgstr "giocante"
 msgid ""
 "binds an NPC to a player (name and skin). It requires the Collectible Skins "
 "mod"
-msgstr "lega un PNG a unə giocante (nome e aspetto). Richiede Collectible Skins"
+msgstr ""
+"lega un PNG a unə giocante (nome e aspetto). Richiede Collectible Skins"
 
 #: src/commands.lua:137
 msgid "prints a list of all the existing NPCs"
@@ -98,32 +99,35 @@ msgid "No NPC selected"
 msgstr "Nessun PNG selezionato"
 
 #: src/items.lua:4
-msgid "Use this to create a new NPC  at your position"
-msgstr "Usalo per creare un PNG nella tua posizione"
+msgid "Create a new Folk at your position"
+msgstr "Crea un Omino alle tue coordinate"
 
 #: src/items.lua:17
-msgid "Use this to edit the NPC you click"
-msgstr "Usalo per modificare il PNG che clicchi"
+msgid "Folk Editor"
+msgstr "Editor Omini"
 
 #: src/items.lua:34
 msgid "You are now editing NPC: @1"
 msgstr "Stai modificando il PNG: @1"
 
 #: src/items.lua:45
-msgid "Use this to remove the NPC you click"
-msgstr "Usalo per rimuovere il PNG che clicchi"
+msgid "Remove the Folk you click"
+msgstr "Rimuovi l'Omino che clicchi"
 
 #: src/items.lua:68
-msgid "Use this to spawn an NPC that you had already created"
-msgstr "Usalo per piazzare un PNG che hai già creato"
+msgid "Spawn a Folk that you had already created"
+msgstr "Piazza un Omino che hai già creato"
 
 #: src/items.lua:82
-msgid "Use this to despawn without deleting the NPC you click"
-msgstr "Usalo per rimuovere il PNG che clicchi senza eliminarlo"
+msgid "Despawn without deleting the Folk you click"
+msgstr "Rimuovi l'Omino che clicchi senza eliminarlo"
 
 #: src/npc.lua:16
 msgid "Folk"
 msgstr "Omino"
+
+#~ msgid "Use this to edit the NPC you click"
+#~ msgstr "Usalo per modificare il PNG che clicchi"
 
 #~ msgid "Hey, I'm a Folk!"
 #~ msgstr "Ciao, sono un Folk!"

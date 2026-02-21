@@ -1,7 +1,7 @@
 local S = core.get_translator("folks")
 
 core.register_tool("folks:npc_creator", {
-  description = S("Use this to create a new NPC  at your position"),
+  description = S("Create a new Folk at your position"),
   inventory_image = "npc_creator.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -14,7 +14,7 @@ core.register_tool("folks:npc_creator", {
 })
 
 core.register_tool("folks:npc_editor", {
-  description = S("Use this to edit the NPC you click"),
+  description = S("Folk Editor"),
   inventory_image = "npc_editor.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -42,7 +42,7 @@ core.register_tool("folks:npc_editor", {
 })
 
 core.register_tool("folks:npc_remover", {
-  description = S("Use this to remove the NPC you click"),
+  description = S("Remove the Folk you click"),
   inventory_image = "npc_remover.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -65,7 +65,7 @@ core.register_tool("folks:npc_remover", {
 })
 
 core.register_tool("folks:npc_spawner", {
-  description = S("Use this to spawn an NPC that you had already created"),
+  description = S("Spawn a Folk that you had already created"),
   inventory_image = "npc_spawner.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,
@@ -79,7 +79,7 @@ core.register_tool("folks:npc_spawner", {
 })
 
 core.register_tool("folks:npc_despawner", {
-  description = S("Use this to despawn without deleting the NPC you click"),
+  description = S("Despawn without deleting the Folk you click"),
   inventory_image = "npc_despawner.png",
   groups = {oddly_breakable_by_hand = "2"},
   on_place = function() end,

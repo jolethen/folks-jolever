@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-21 16:57+0100\n"
+"POT-Creation-Date: 2026-02-21 17:42+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -104,11 +104,11 @@ msgid "No NPC selected"
 msgstr ""
 
 #: src/items.lua:4
-msgid "Use this to create a new NPC  at your position"
+msgid "Create a new Folk at your position"
 msgstr ""
 
 #: src/items.lua:17
-msgid "Use this to edit the NPC you click"
+msgid "Folk Editor"
 msgstr ""
 
 #: src/items.lua:34
@@ -116,15 +116,15 @@ msgid "You are now editing NPC: @1"
 msgstr ""
 
 #: src/items.lua:45
-msgid "Use this to remove the NPC you click"
+msgid "Remove the Folk you click"
 msgstr ""
 
 #: src/items.lua:68
-msgid "Use this to spawn an NPC that you had already created"
+msgid "Spawn a Folk that you had already created"
 msgstr ""
 
 #: src/items.lua:82
-msgid "Use this to despawn without deleting the NPC you click"
+msgid "Despawn without deleting the Folk you click"
 msgstr ""
 
 #: src/npc.lua:16
