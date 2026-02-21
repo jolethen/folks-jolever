@@ -1,0 +1,132 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-21 16:57+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/commands.lua:7
+msgid "Manage folks npcs"
+msgstr ""
+
+#: src/commands.lua:44 src/commands.lua:66 src/commands.lua:88
+#: src/commands.lua:112 src/formspecs.lua:57
+msgid ""
+"You are not editing an NPC. Click the NPC you want to edit with the NPC "
+"editor item."
+msgstr ""
+
+#: src/commands.lua:51 src/commands.lua:73 src/commands.lua:95
+#: src/commands.lua:118 src/formspecs.lua:68
+msgid "Edited NPC: @1"
+msgstr ""
+
+#: src/commands.lua:120
+msgid "Couldn't retrieve player texture (is it online?)"
+msgstr ""
+
+#: src/commands.lua:127
+msgid "You need Collectible Skins to use this feature"
+msgstr ""
+
+#: src/commands.lua:135
+msgid "COMMANDS"
+msgstr ""
+
+#: src/commands.lua:136
+msgid "player"
+msgstr ""
+
+#: src/commands.lua:136
+msgid ""
+"binds an NPC to a player (name and skin). It requires the Collectible Skins "
+"mod"
+msgstr ""
+
+#: src/commands.lua:137
+msgid "prints a list of all the existing NPCs"
+msgstr ""
+
+#: src/formspecs.lua:11
+msgid "Edit Folk"
+msgstr ""
+
+#: src/formspecs.lua:12
+msgid "Folk name"
+msgstr ""
+
+#: src/formspecs.lua:13
+msgid "Folk Name Color"
+msgstr ""
+
+#: src/formspecs.lua:14
+msgid "Folk Texture (with or without .png)"
+msgstr ""
+
+#: src/formspecs.lua:15
+msgid "Messages (every line is a message)"
+msgstr ""
+
+#: src/formspecs.lua:16
+msgid "Save"
+msgstr ""
+
+#: src/formspecs.lua:37
+msgid "Spawn NPC"
+msgstr ""
+
+#: src/formspecs.lua:40
+msgid "Spawn"
+msgstr ""
+
+#: src/formspecs.lua:78
+msgid "Exited from NPC: @1"
+msgstr ""
+
+#: src/formspecs.lua:94
+msgid "Spawned NPC: @1"
+msgstr ""
+
+#: src/formspecs.lua:98
+msgid "No NPC selected"
+msgstr ""
+
+#: src/items.lua:4
+msgid "Use this to create a new NPC  at your position"
+msgstr ""
+
+#: src/items.lua:17
+msgid "Use this to edit the NPC you click"
+msgstr ""
+
+#: src/items.lua:34
+msgid "You are now editing NPC: @1"
+msgstr ""
+
+#: src/items.lua:45
+msgid "Use this to remove the NPC you click"
+msgstr ""
+
+#: src/items.lua:68
+msgid "Use this to spawn an NPC that you had already created"
+msgstr ""
+
+#: src/items.lua:82
+msgid "Use this to despawn without deleting the NPC you click"
+msgstr ""
+
+#: src/npc.lua:16
+msgid "Folk"
+msgstr ""
