@@ -3,6 +3,7 @@ local S = core.get_translator("folks")
 local IS_COLLECTIBLE_SKINS_ENABLED = core.get_modpath("collectible_skins")
 
 local cmd = chatcmdbuilder.register("folks", {
+  params = "help",
   description = S("Manage folks npcs"),
   privs = { folks_admin = true }
 })
@@ -125,4 +126,14 @@ cmd:sub("bind :name:text", function(pname, bind_to)
   else
     core.chat_send_player(pname, core.colorize("#ff0000", S("You need Collectible Skins to use this feature")))
   end
+end)
+
+
+
+cmd:sub("help", function(sender)
+  core.chat_send_player(sender,
+    core.colorize("#ffff00", S("COMMANDS")) .. "\n"
+    .. core.colorize("#00ffff", "/folks bind") .. core.colorize("#00aaaa"," <" .. S("player") .. ">: ") .. S("binds an NPC to a player (name and skin). It requires the Collectible Skins mod") .. "\n"
+    .. core.colorize("#00ffff", "/folks list") .. ": " .. S("prints a list of all the existing NPCs")
+  )
 end)
