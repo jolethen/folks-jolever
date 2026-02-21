@@ -35,6 +35,8 @@ local function convert_old_format_npcs()
   update_storage()
 
   core.log("action", "[Folks] NPCs successfully converted into the new format")
+
+  -- TODO: riavvia dopo 1s
 end
 
 
