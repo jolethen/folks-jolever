@@ -28,7 +28,11 @@ function folks.get_spawn_formspec()
   local dropdown_items = {}
 
   for npc_id, npc in pairs(npcs) do
-    table.insert(dropdown_items, escape(npc._npc_name .. " - " .. npc_id))
+    local name = npc._npc_name
+    if name == "" then
+      name = "<unnamed>"
+    end
+    table.insert(dropdown_items, escape(name .. " - " .. npc_id))
   end
 
   local formspec = {
