@@ -13,6 +13,7 @@ dofile(srcpath .. "/formspecs.lua")
 dofile(srcpath .. "/items.lua")
 dofile(srcpath .. "/npc.lua")
 dofile(srcpath .. "/privs.lua")
+dofile(srcpath .. "/roles.lua")
 
 -- callback for collectible_skins
 if core.get_modpath("collectible_skins") then
