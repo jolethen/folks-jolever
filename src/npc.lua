@@ -1,5 +1,10 @@
 local S = core.get_translator("folks")
 
+-- [Addition]: Safe loading of the roles.lua configuration file
+local modpath = core.get_modpath("folks")
+local roles_file = loadfile(modpath .. "/src/roles.lua")
+local roles = roles_file and roles_file() or { registry = {} }
+
 folks.default_npc = {
   initial_properties = {
     hp_max = 9999,
@@ -16,7 +21,6 @@ folks.default_npc = {
     nametag = S("Folk"),
     nametag_color = "#ffffff",
   },
-
   -- mobkit properties
   timeout = 0,
   max_hp = 9999,
@@ -25,18 +29,14 @@ folks.default_npc = {
   on_step = mobkit.stepfunc,
   on_activate = function(self, staticdata, dtime_s)
     mobkit.actfunc(self, staticdata, dtime_s)
-
     self._npc_object = self.object
     -- TODO: non penso staticdata possa mai essere nil, usando mobkit.remember quando li fo nascere
     if staticdata ~= nil then
       local npc_id = mobkit.recall(self, "_npc_id")
-
       if type(npc_id) ~= "number" then
         folks.migrate_npc_id(self, npc_id)
       end
-
       local npc_data = folks.get_npc(npc_id)
-
       if npc_data then  -- Here I set all the customizable properties
         self.object:set_properties({
           nametag = npc_data._npc_name,
@@ -48,7 +48,6 @@ folks.default_npc = {
       end
     end
   end,
-
   get_staticdata = mobkit.statfunc,
   view_range = 24,
   max_speed = 10,
@@ -56,9 +55,7 @@ folks.default_npc = {
   logic = function(self)
     mobkit.vitals(self)
     local prty = mobkit.get_queue_priority(self)
-
     local pos = self.object:get_pos()
-
     if prty < 10 then
       local plyr = mobkit.get_nearby_player(self)
       if plyr and vector.distance(pos,plyr:get_pos()) < 8 then
@@ -67,25 +64,37 @@ folks.default_npc = {
       end
     end
   end,
-
-
   on_rightclick = function(self, player)
-    local msg_index = folks.get_next_message_index(self._npc_id, player:get_player_name())
+    local player_name = player:get_player_name()
+    local npc_data = folks.get_npc(self._npc_id)
+    local npc_name = S("Folk")
+    
+    if npc_data and npc_data._npc_name then
+      npc_name = npc_data._npc_name
+    end
+
+    -- [Core Logic Retained]: Still fetches and sends the green chat message
+    local msg_index = folks.get_next_message_index(self._npc_id, player_name)
     local msg = folks.get_npc_message(self._npc_id, msg_index)
     if msg then
-      local npc_name = folks.get_npc(self._npc_id)._npc_name
-      core.chat_send_player(player:get_player_name(), core.colorize("#00ff00", npc_name .. ": " .. S(msg)))
+      core.chat_send_player(player_name, core.colorize("#00ff00", npc_name .. ": " .. S(msg)))
+    end
+
+    -- [Addition]: Modular Role Handling
+    if npc_name then
+      local clean_name = string.lower(npc_name)
+      -- Checks if the NPC's name is a registered role inside roles.lua
+      if roles.registry[clean_name] and roles.registry[clean_name].action then
+        roles.registry[clean_name].action(player, self)
+      end
     end
   end,
-
   -- custom properties
   _isfolk = true,
   _isremoved = false,
   _npc_object = nil,
   _bound_player = nil,  -- nil or player name
-  _npc_messages = {"Hey, I'm a Folk!"} -- contains all npc's messages
+  _npc_messages = {"Hey, I'm a Folk!"}
+ -- contains all npc's messages
 }
-
-
-
 core.register_entity("folks:npc", folks.default_npc)
