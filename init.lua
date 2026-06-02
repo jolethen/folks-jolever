@@ -11,9 +11,11 @@ dofile(srcpath .. "/api.lua")
 dofile(srcpath .. "/commands.lua")
 dofile(srcpath .. "/formspecs.lua")
 dofile(srcpath .. "/items.lua")
-dofile(srcpath .. "/npc.lua")
 dofile(srcpath .. "/privs.lua")
+
+-- [Order Fix]: Load roles first so the npc logic can safely read the registry table
 dofile(srcpath .. "/roles.lua")
+dofile(srcpath .. "/npc.lua")
 
 -- callback for collectible_skins
 if core.get_modpath("collectible_skins") then
