@@ -3,28 +3,40 @@ local S = core.get_translator("folks")
 
 local ghoti = {}
 
--- 1. Total Pool of 20 Fishes mapped directly from your ethereal texture screenshots
+-- 1. Complete fish pool table (Using absolute external literals for the 'fishing' mod namespace)
 local fish_pool = {
-  {item = "ethereal:fish_angler",     price = 45,  label = "Anglerfish"},
-  {item = "ethereal:fish_bluefin",    price = 20,  label = "Bluefin Tuna"},
-  {item = "ethereal:fish_blueram",    price = 15,  label = "Blue Ram Cichlid"},
-  {item = "ethereal:fish_carp",       price = 10,  label = "Carp"},
-  {item = "ethereal:fish_catfish",    price = 18,  label = "Catfish"},
-  {item = "ethereal:fish_cichlid",    price = 12,  label = "Cichlid"},
-  {item = "ethereal:fish_clownfish",  price = 14,  label = "Clownfish"},
-  {item = "ethereal:fish_cod",        price = 8,   label = "Raw Cod"},
-  {item = "ethereal:fish_coy",        price = 25,  label = "Coy Fish"},
-  {item = "ethereal:fish_flathead",   price = 16,  label = "Flathead Fish"},
-  {item = "ethereal:fish_flounder",   price = 14,  label = "Flounder"},
-  {item = "ethereal:fish_jellyfish",  price = 30,  label = "Jellyfish"},
-  {item = "ethereal:fish_mackerel",   price = 9,   label = "Mackerel"},
-  {item = "ethereal:fish_parrot",     price = 22,  label = "Parrotfish"},
-  {item = "ethereal:fish_pike",       price = 24,  label = "Pike"},
-  {item = "ethereal:fish_piranha",    price = 35,  label = "Piranha"},
-  {item = "ethereal:fish_plaice",     price = 11,  label = "Plaice"},
-  {item = "ethereal:fish_pufferfish", price = 28,  label = "Pufferfish"},
-  {item = "ethereal:fish_redsnapper", price = 20,  label = "Red Snapper"},
-  {item = "ethereal:fish_salmon",     price = 15,  label = "Salmon"}
+  {item = "fishing:fish_bluefin",        price = 20,  label = "Bluefin Tuna"},
+  {item = "fishing:fish_blueram",        price = 15,  label = "Blue Ram Cichlid"},
+  {item = "fishing:fish_catfish",        price = 18,  label = "Catfish"},
+  {item = "fishing:fish_plaice",         price = 11,  label = "Plaice"},
+  {item = "fishing:fish_salmon",         price = 15,  label = "Salmon"},
+  {item = "fishing:fish_clownfish",      price = 14,  label = "Clownfish"},
+  {item = "fishing:fish_pike",           price = 24,  label = "Pike"},
+  {item = "fishing:fish_flathead",       price = 16,  label = "Flathead Fish"},
+  {item = "fishing:fish_pufferfish",     price = 28,  label = "Pufferfish"},
+  {item = "fishing:fish_cichlid",        price = 12,  label = "Cichlid"},
+  {item = "fishing:fish_coy",            price = 25,  label = "Coy Fish"},
+  {item = "fishing:fish_tilapia",        price = 13,  label = "Tilapia"},
+  {item = "fishing:fish_trevally",       price = 17,  label = "Trevally"},
+  {item = "fishing:fish_angler",         price = 45,  label = "Anglerfish"},
+  {item = "fishing:fish_jellyfish",      price = 30,  label = "Jellyfish"},
+  {item = "fishing:fish_seahorse",       price = 20,  label = "Seahorse"},
+  {item = "fishing:fish_seahorse_green", price = 22,  label = "Green Seahorse"},
+  {item = "fishing:fish_seahorse_pink",  price = 22,  label = "Pink Seahorse"},
+  {item = "fishing:fish_seahorse_blue",  price = 25,  label = "Blue Seahorse"},
+  {item = "fishing:fish_seahorse_yellow",price = 22,  label = "Yellow Seahorse"},
+  {item = "fishing:fish_parrot",         price = 22,  label = "Parrotfish"},
+  {item = "fishing:fish_piranha",        price = 35,  label = "Piranha"},
+  {item = "fishing:fish_tuna",           price = 18,  label = "Tuna"},
+  {item = "fishing:fish_trout",          price = 14,  label = "Trout"},
+  {item = "fishing:fish_cod",            price = 8,   label = "Raw Cod"},
+  {item = "fishing:fish_flounder",       price = 14,  label = "Flounder"},
+  {item = "fishing:fish_redsnapper",     price = 20,  label = "Red Snapper"},
+  {item = "fishing:fish_squid",          price = 32,  label = "Squid"},
+  {item = "fishing:fish_shrimp",         price = 6,   label = "Shrimp"},
+  {item = "fishing:fish_carp",           price = 10,  label = "Carp"},
+  {item = "fishing:fish_tetra",          price = 7,   label = "Neon Tetra"},
+  {item = "fishing:fish_mackerel",       price = 9,   label = "Mackerel"}
 }
 
 -- Market state management tracking
@@ -90,17 +102,18 @@ function ghoti.show_formspec(player_name)
   local elapsed_seconds = (current_time - ghoti.market.last_roll_time) / 1000000
   local time_left_mins = math.max(0, math.floor(60 - (elapsed_seconds / 60)))
 
+  -- WIDENED FORMAT TO FIX TEXT OVERLAPS
   local formspec = 
-    "size[10,8.5]" ..
+    "size[11.5,8.5]" ..
     "real_coordinates[true]" ..
     "title[0.5,0.4;Ghoti's Fish Market]" ..
     "label[0.5,0.9;Offers refresh in: " .. time_left_mins .. " minutes]" ..
-    "box[0.5,1.2;9,0.02;#ffffff]"
+    "box[0.5,1.2;10.5,0.02;#ffffff]"
 
   local row_y = 1.5
   for i, deal in ipairs(ghoti.market.active_deals) do
     local stock_info = "Stock: " .. deal.stock .. "/" .. deal.max_stock
-    local display_button = "button[7.5," .. row_y .. ";1.8,0.7;ghoti_sell_" .. i .. ";Sell 1x]"
+    local display_button = "button[9.0," .. row_y .. ";2.0,0.7;ghoti_sell_" .. i .. ";Sell 1x]"
     
     -- If out of stock, calculate remaining time on the cooldown
     if deal.stock == 0 and deal.out_of_stock_time then
@@ -109,22 +122,22 @@ function ghoti.show_formspec(player_name)
       stock_info = "OUT OF STOCK (Restocking in " .. remaining_cooldown .. "m)"
       
       -- Fallback safe design layout rendering button completely unclickable
-      display_button = "button_exit[7.5," .. row_y .. ";1.8,0.7;disabled;Sold Out]"
+      display_button = "button_exit[9.0," .. row_y .. ";2.0,0.7;disabled;Sold Out]"
     end
 
     formspec = formspec ..
       "item_image[0.6," .. row_y .. ";0.8,0.8;" .. deal.item .. "]" ..
       "label[1.6," .. (row_y + 0.1) .. ";" .. deal.label .. "]" ..
       "label[1.6," .. (row_y + 0.45) .. ";" .. stock_info .. "]" ..
-      "label[5.0," .. (row_y + 0.25) .. ";Value: " .. deal.price .. " Gold]" ..
+      "label[5.8," .. (row_y + 0.25) .. ";Value: " .. deal.price .. " Gold]" ..
       display_button
       
     row_y = row_y + 0.9
   end
 
   formspec = formspec .. 
-    "box[0.5,6.0;9,0.02;#ffffff]" ..
-    "list[current_player;main;0.5,6.3;8,2;]" ..
+    "box[0.5,6.0;10.5,0.02;#ffffff]" ..
+    "list[current_player;main;1.2,6.3;8,2;]" ..
     "listring[current_player;main]"
 
   core.show_formspec(player_name, "folks:ghoti_market", formspec)
@@ -171,7 +184,7 @@ core.register_on_player_receive_fields(function(player, formname, fields)
             deal.out_of_stock_time = core.get_us_time()
           end
           
-          -- Economy rewards messaging hook (Connect custom currency engines here!)
+          -- Economy rewards messaging hook
           core.chat_send_player(player_name, core.colorize("#00ff00", "Ghoti: Thanks! Here is your " .. deal.price .. " Gold for the " .. deal.label .. "."))
           
           ghoti.show_formspec(player_name)
