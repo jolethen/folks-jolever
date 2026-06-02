@@ -1,6 +1,11 @@
 -- roles.lua
 local roles = {}
 
+-- Safely locate and load the external specialized ghoti script file
+local modpath = core.get_modpath("folks")
+local ghoti_file = loadfile(modpath .. "/src/ghoti.lua")
+local ghoti = ghoti_file and ghoti_file()
+
 -- Define your roles here
 roles.registry = {
   ["banker"] = {
@@ -27,6 +32,17 @@ roles.registry = {
         
       -- Render the UI safely to the player's screen
       core.show_formspec(player_name, formspec_name, formspec)
+    end
+  },
+  
+  ["ghoti"] = {
+    -- Handled via separate clean mod script chunk
+    action = function(player, npc_self)
+      if ghoti then
+        ghoti.on_interact(player)
+      else
+        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Fisherman module failed to load."))
+      end
     end
   },
   
