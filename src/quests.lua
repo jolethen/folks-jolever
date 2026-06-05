@@ -8,11 +8,9 @@ folks.quests = {}
 local storage = core.get_mod_storage()
 
 -- Memory cache for live player data tracking
--- Structure: folks.quests.player_data[player_name] = { active = {}, completed = {} }
 folks.quests.player_data = {}
 
 -- Memory cache tracking live player HUD IDs so we don't leak or duplicate elements
--- Structure: folks.quests.hud_ids[player_name] = { title_id = ID, quest_slots = { [1] = ID, [2] = ID, ... } }
 folks.quests.hud_ids = {}
 
 -- 1. Master Quest Database Definitions (Assigned strictly to Quester)
@@ -55,7 +53,6 @@ function folks.quests.load_player_db(player_name)
   if raw_string and raw_string ~= "" then
     local data = core.deserialize(raw_string)
     if type(data) == "table" then
-      -- Ensure structural properties survive corruption or old version wipes
       data.active = data.active or {}
       data.completed = data.completed or {}
       folks.quests.player_data[player_name] = data
@@ -63,7 +60,6 @@ function folks.quests.load_player_db(player_name)
     end
   end
   
-  -- Fallback Initialization if data does not exist yet
   folks.quests.player_data[player_name] = { active = {}, completed = {} }
   return folks.quests.player_data[player_name]
 end
@@ -76,22 +72,19 @@ function folks.quests.save_player_db(player_name)
 end
 
 -- 3. Dynamic Screen-Aligned HUD Engine
--- Placed on the right margin, starting slightly above typical mobile/desktop jump configurations
 function folks.quests.update_hud(player)
+  if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
   local pdata = folks.quests.player_data[player_name] or folks.quests.load_player_db(player_name)
   
-  -- Initialize HUD tracking memory context for this user slot if empty
   if not folks.quests.hud_ids[player_name] then
     folks.quests.hud_ids[player_name] = { title_id = nil, quest_slots = {} }
   end
   local tracking = folks.quests.hud_ids[player_name]
   
-  -- Step A: Check if the player has any active assignments running
   local has_active = false
   for _, _ in pairs(pdata.active) do has_active = true break end
   
-  -- Clear all HUD elements if quest log is empty or wiped out
   if not has_active then
     if tracking.title_id then 
       player:hud_remove(tracking.title_id) 
@@ -104,8 +97,6 @@ function folks.quests.update_hud(player)
     return
   end
   
-  -- Step B: Render or update the persistent master Header Title text
-  -- alignment = {x=-1, y=0} puts anchor to the right margin, text grows leftwards
   if not tracking.title_id then
     tracking.title_id = player:hud_add({
       hud_elem_type = "text",
@@ -114,11 +105,10 @@ function folks.quests.update_hud(player)
       alignment     = {x = -1, y = 0},
       scale         = {x = 100, y = 20},
       text          = "=== QUESTS ===",
-      number        = 0x00f0ff, -- Sci-Fi Light Aqua Header Accent
+      number        = 0x00f0ff,
     })
   end
   
-  -- Step C: Process text arrays down the right margin column
   local offset_y = 25
   local slot_idx = 1
   local inv = player:get_inventory()
@@ -126,20 +116,21 @@ function folks.quests.update_hud(player)
   for q_id, _ in pairs(pdata.active) do
     local cfg = folks.quests.database[q_id]
     if cfg then
-      -- Dynamically track live progress quantities based on objectives type
       local progress_str = ""
       if cfg.type == "gather" and inv then
-        local count = inv:get_stack("main", cfg.target_item):get_count()
+        local count = 0
+        local stack = inv:get_stack("main", cfg.target_item)
+        if stack and not stack:is_empty() then
+          count = stack:get_count()
+        end
         progress_str = " (" .. math.min(count, cfg.target_count) .. "/" .. cfg.target_count .. ")"
       end
       
       local line_text = "• " .. cfg.title .. progress_str
       
       if tracking.quest_slots[slot_idx] then
-        -- Element exists on screen: change text layout directly to reduce network overhead
         player:hud_change(tracking.quest_slots[slot_idx], "text", line_text)
       else
-        -- Register and inject a completely fresh vertical line slot element
         tracking.quest_slots[slot_idx] = player:hud_add({
           hud_elem_type = "text",
           position      = {x = 1.0, y = 0.4},
@@ -147,7 +138,7 @@ function folks.quests.update_hud(player)
           alignment     = {x = -1, y = 0},
           scale         = {x = 100, y = 20},
           text          = line_text,
-          number        = 0xffffff, -- High contrast bone-white text lines
+          number        = 0xffffff,
         })
       end
       
@@ -156,7 +147,6 @@ function folks.quests.update_hud(player)
     end
   end
   
-  -- Step D: Cleanly strip away excess legacy layout lines if a quest was completed or dropped
   while #tracking.quest_slots >= slot_idx do
     local target_idx = #tracking.quest_slots
     player:hud_remove(tracking.quest_slots[target_idx])
@@ -166,15 +156,19 @@ end
 
 -- 4. Interactive Core Mechanics (Accept / Verify Loops)
 function folks.quests.handle_npc_interaction(player, npc_name_raw)
+  if not player or not player:is_player() then return false end
+  
   local player_name = player:get_player_name()
   local npc_id_clean = string.lower(npc_name_raw)
   local pdata = folks.quests.player_data[player_name] or folks.quests.load_player_db(player_name)
   local inv = player:get_inventory()
 
+  -- Hard safety fallback if inventory doesn't exist
+  if not inv then return false end
+
   local target_quest_id = nil
   local quest_cfg = nil
   
-  -- Find prioritized quest assignment context
   for q_id, cfg in pairs(folks.quests.database) do
     if cfg.giver == npc_id_clean then
       if pdata.active[q_id] then
@@ -188,19 +182,23 @@ function folks.quests.handle_npc_interaction(player, npc_name_raw)
     end
   end
 
-  if not target_quest_id then return false end
+  if not target_quest_id or not quest_cfg then return false end
 
   -- Progression Check Loop Execution
   if pdata.active[target_quest_id] then
     local current_count = 0
     if quest_cfg.type == "gather" then
-      current_count = inv:get_stack("main", quest_cfg.target_item):get_count()
+      local stack = inv:get_stack("main", quest_cfg.target_item)
+      if stack and not stack:is_empty() then
+        current_count = stack:get_count()
+      end
     end
 
     if current_count >= quest_cfg.target_count then
-      inv:remove_item("main", ItemStack(quest_cfg.target_item .. " " .. quest_cfg.target_count))
+      -- Safe alternative ItemStack constructor using explicit table dictionaries
+      inv:remove_item("main", ItemStack({name = quest_cfg.target_item, count = quest_cfg.target_count}))
       
-      local reward = ItemStack(quest_cfg.reward_item .. " " .. quest_cfg.reward_count)
+      local reward = ItemStack({name = quest_cfg.reward_item, count = quest_cfg.reward_count})
       if inv:room_for_item("main", reward) then
         inv:add_item("main", reward)
       else
@@ -288,10 +286,10 @@ end
 
 -- 6. Engine Server Hooks & Global Event Registrations
 core.register_on_joinplayer(function(player)
+  if not player then return end
   local name = player:get_player_name()
   folks.quests.load_player_db(name)
   
-  -- Short layout sleep gives client frame geometry time to load before initialization
   core.after(1.0, function()
     local p = core.get_player_by_name(name)
     if p then folks.quests.update_hud(p) end
@@ -299,15 +297,14 @@ core.register_on_joinplayer(function(player)
 end)
 
 core.register_on_leaveplayer(function(player)
+  if not player then return end
   local name = player:get_player_name()
   folks.quests.save_player_db(name)
   
-  -- Clear memory pointers safely to avoid trace leaks
   folks.quests.player_data[name] = nil
   folks.quests.hud_ids[name] = nil
 end)
 
--- Global block tracing intercepts inventory alterations live
 core.register_on_placenode(function(pos, newnode, placer)
   if placer and placer:is_player() then folks.quests.update_hud(placer) end
 end)
@@ -316,7 +313,6 @@ core.register_on_dignode(function(pos, oldnode, digger)
   if digger and digger:is_player() then folks.quests.update_hud(digger) end
 end)
 
--- Formspec field transaction callback updates values live during storage manipulation
 core.register_on_player_receive_fields(function(player, formname, fields)
   if player and player:is_player() then 
     folks.quests.update_hud(player) 
