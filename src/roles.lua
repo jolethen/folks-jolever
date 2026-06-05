@@ -1,10 +1,16 @@
 -- roles.lua
 local roles = {}
 
--- Safely locate and load the external specialized ghoti script file
+-- Safely locate and load the external specialized scripts
 local modpath = core.get_modpath("folks")
+
+-- Load Ghoti (Fisherman Shop)
 local ghoti_file = loadfile(modpath .. "/src/ghoti.lua")
 local ghoti = ghoti_file and ghoti_file()
+
+-- Load the Quest System
+local quest_file = loadfile(modpath .. "/src/quests.lua")
+local quest_sys = quest_file and quest_file()
 
 -- Define your roles here
 roles.registry = {
@@ -42,6 +48,18 @@ roles.registry = {
         ghoti.on_interact(player)
       else
         core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Fisherman module failed to load."))
+      end
+    end
+  },
+  
+  ["quester"] = {
+    -- Central Operational Taskmaster role
+    action = function(player, npc_self)
+      if quest_sys then
+        -- Passes the clean name string "Quester" to match the database logic
+        quest_sys.handle_npc_interaction(player, "Quester")
+      else
+        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Quest subsystem failed to load."))
       end
     end
   },
