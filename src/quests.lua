@@ -13,11 +13,12 @@ folks.quests.player_data = {}
 -- Memory cache tracking live player HUD IDs so we don't leak or duplicate elements
 folks.quests.hud_ids = {}
 
--- 1. Master Quest Database Definitions (Assigned strictly to Quester)
+-- 1. Master Quest Database Definitions (With strict chronological chain progression)
 folks.quests.database = {
   ["fish_novice"] = {
     title = S("The Beginner's Catch"),
     giver = "quester",
+    requires = nil, -- No prerequisite; available immediately
     description = S("Quester wants you to prove your angling skills. Bring him 3 Raw Cod."),
     type = "gather",
     target_item = "fishing:fish_cod",
@@ -33,6 +34,7 @@ folks.quests.database = {
   ["deep_sea_danger"] = {
     title = S("Depths of Danger"),
     giver = "quester",
+    requires = "fish_novice", -- Must complete fish_novice first!
     description = S("Quester is looking for an elusive prize. Bring him 1 rare Anglerfish."),
     type = "gather",
     target_item = "fishing:fish_angler",
@@ -47,8 +49,29 @@ folks.quests.database = {
   }
 }
 
--- 2. Persistent Database Storage Engine (JSON Serialization)
+---
+-- Helper function to safely count total items of a specific type in player inventory
+local function get_total_item_count(inv, item_name)
+  if not inv then return 0 end
+  local inv_list = inv:get_list("main")
+  if not inv_list then return 0 end
+
+  local total = 0
+  for _, stack in ipairs(inv_list) do
+    if stack and not stack:is_empty() and stack:get_name() == item_name then
+      total = total + stack:get_count()
+    end
+  end
+  return total
+end
+---
+
+-- 2. Persistent Database Storage Engine (Luanti Serialization)
 function folks.quests.load_player_db(player_name)
+  if folks.quests.player_data[player_name] then
+    return folks.quests.player_data[player_name]
+  end
+
   local raw_string = storage:get_string("quest_save:" .. player_name)
   if raw_string and raw_string ~= "" then
     local data = core.deserialize(raw_string)
@@ -90,7 +113,7 @@ function folks.quests.update_hud(player)
       player:hud_remove(tracking.title_id) 
       tracking.title_id = nil 
     end
-    for i, hud_id in ipairs(tracking.quest_slots) do
+    for _, hud_id in ipairs(tracking.quest_slots) do
       player:hud_remove(hud_id)
     end
     tracking.quest_slots = {}
@@ -118,11 +141,7 @@ function folks.quests.update_hud(player)
     if cfg then
       local progress_str = ""
       if cfg.type == "gather" and inv then
-        local count = 0
-        local stack = inv:get_stack("main", cfg.target_item)
-        if stack and not stack:is_empty() then
-          count = stack:get_count()
-        end
+        local count = get_total_item_count(inv, cfg.target_item)
         progress_str = " (" .. math.min(count, cfg.target_count) .. "/" .. cfg.target_count .. ")"
       end
       
@@ -163,42 +182,57 @@ function folks.quests.handle_npc_interaction(player, npc_name_raw)
   local pdata = folks.quests.player_data[player_name] or folks.quests.load_player_db(player_name)
   local inv = player:get_inventory()
 
-  -- Hard safety fallback if inventory doesn't exist
   if not inv then return false end
 
   local target_quest_id = nil
   local quest_cfg = nil
   
+  -- Step A: First priority evaluation - check if the player already has an ongoing active quest with this NPC
   for q_id, cfg in pairs(folks.quests.database) do
-    if cfg.giver == npc_id_clean then
-      if pdata.active[q_id] then
-        target_quest_id = q_id
-        quest_cfg = cfg
-        break
-      elseif not pdata.completed[q_id] and not target_quest_id then
-        target_quest_id = q_id
-        quest_cfg = cfg
+    if cfg.giver == npc_id_clean and pdata.active[q_id] then
+      target_quest_id = q_id
+      quest_cfg = cfg
+      break
+    end
+  end
+
+  -- Step B: If no active assignment is running, look for the next eligible unlocked link in the timeline chain
+  if not target_quest_id then
+    for q_id, cfg in pairs(folks.quests.database) do
+      if cfg.giver == npc_id_clean and not pdata.completed[q_id] then
+        -- Strict prerequisite checklist verification gating loop
+        local tracking_passed = true
+        if cfg.requires and not pdata.completed[cfg.requires] then
+          tracking_passed = false
+        end
+        
+        if tracking_passed then
+          target_quest_id = q_id
+          quest_cfg = cfg
+          break
+        end
       end
     end
   end
 
-  if not target_quest_id or not quest_cfg then return false end
+  -- No available content remaining for this specific npc unit
+  if not target_quest_id or not quest_cfg then 
+    core.chat_send_player(player_name, core.colorize("#a6b2c0", npc_name_raw .. ": Clear sailing today, friend! I don't have any open cargo requests left for you."))
+    return false 
+  end
 
   -- Progression Check Loop Execution
   if pdata.active[target_quest_id] then
     local current_count = 0
     if quest_cfg.type == "gather" then
-      local stack = inv:get_stack("main", quest_cfg.target_item)
-      if stack and not stack:is_empty() then
-        current_count = stack:get_count()
-      end
+      current_count = get_total_item_count(inv, quest_cfg.target_item)
     end
 
     if current_count >= quest_cfg.target_count then
-      -- Safe alternative ItemStack constructor using explicit table dictionaries
-      inv:remove_item("main", ItemStack({name = quest_cfg.target_item, count = quest_cfg.target_count}))
+      -- Safe, clean programmatic removal using clean explicit stack constructor strings
+      inv:remove_item("main", quest_cfg.target_item .. " " .. quest_cfg.target_count)
       
-      local reward = ItemStack({name = quest_cfg.reward_item, count = quest_cfg.reward_count})
+      local reward = ItemStack(quest_cfg.reward_item .. " " .. quest_cfg.reward_count)
       if inv:room_for_item("main", reward) then
         inv:add_item("main", reward)
       else
@@ -235,51 +269,70 @@ end
 function folks.quests.show_quest_log(player_name)
   local pdata = folks.quests.player_data[player_name] or folks.quests.load_player_db(player_name)
   
+  -- Base canvas setups
   local formspec = 
-    "size[12.0,9.0]" ..
+    "size[13.0,9.5]" ..
     "real_coordinates[true]" ..
-    "style_type[label;font=bold;font_size=16]" ..
+    
+    -- Global custom UI styling elements
+    "style_type[label;font=bold;font_size=18]" ..
     "style_type[box;border=false]" ..
-    "style_type[button;border=true;font=bold;font_size=14;backcolor=#ffffff10;textcolor=#ffffff]" ..
-    "style_type[button:hover;backcolor=#00f0ff20;textcolor=#00f0ff]" ..
-    "background[0,0;12.0,9.0;#11161b;true]" ..
-    "box[0,0;12.0,0.15;#00f0ff]" ..
-    "label[0.6,0.6;#00f0ff;TECHBLOX LOGBOOK]" ..
-    "label[0.6,1.0;#8899a6;Track active tactical operations and open assignments]" ..
-    "box[0.6,1.4;10.8,0.02;#ffffff15]"
+    "style_type[button;border=true;font=bold;font_size=15;backcolor=#1f252d;textcolor=#ffffff]" ..
+    "style_type[button:hover;backcolor=#00f0ff15;textcolor=#00f0ff;bordercolor=#00f0ff]" ..
+    
+    -- Main deep tactical background frame
+    "background[0,0;13.0,9.5;#11161b;true]" ..
+    
+    -- Glowing top border accent line
+    "box[0,0;13.0,0.12;#00f0ff]" ..
+    
+    -- Top Header Navigation & Titles
+    "label[0.8,0.7;#00f0ff;TECHBLOX LOGBOOK]" ..
+    "label[0.8,1.15;#8899a6;Manage ongoing tactical operations and terminal assignments]" ..
+    "box[0.8,1.55;11.4,0.03;#ffffff12]" -- Subtle divider line
 
-  local row_y = 1.7
+  local row_y = 1.9
   local has_active = false
   
   for q_id, _ in pairs(pdata.active) do
     has_active = true
     local cfg = folks.quests.database[q_id]
     
-    formspec = formspec .. 
-      "box[0.6," .. row_y .. ";10.8,1.8;#ffffff06]" ..
-      "box[0.6," .. row_y .. ";0.05,1.8;#00f0ff]"
+    if cfg then
+      -- Panel container backing card
+      formspec = formspec .. 
+        "box[0.8," .. row_y .. ";11.4,2.0;#ffffff04]" .. -- Translucent dark panel
+        "box[0.8," .. row_y .. ";0.06,2.0;#00f0ff]"    -- Left border cyan operation accent
+        
+      local clean_giver = cfg.giver:gsub("^%l", string.upper)
       
-    local clean_giver = cfg.giver:gsub("^%l", string.upper)
-    formspec = formspec .. 
-      "label[0.9," .. (row_y + 0.3) .. ";#ffffff" .. cfg.title .. "]" ..
-      "label[0.9," .. (row_y + 0.65) .. ";#8899a6;Assigned by: " .. clean_giver .. "]" ..
-      "hypertext[0.9," .. (row_y + 1.0) .. ";6.0,0.6;desc_" .. q_id .. ";<global font=normal size=14 color=#b2c0cc>" .. cfg.description .. "]" ..
-      "box[7.5," .. (row_y + 0.25) .. ";3.5,1.3;#00000030]" ..
-      "label[7.8," .. (row_y + 0.5) .. ";#ffaa00;REWARD:]" ..
-      "item_image[7.8," .. (row_y + 0.75) .. ";0.6,0.6;" .. cfg.reward_item .. "]" ..
-      "label[8.6," .. (row_y + 0.95) .. ";#ffffffx" .. cfg.reward_count .. " Gold]"
-    
-    row_y = row_y + 2.0
+      -- Quest Context Data Lines
+      formspec = formspec .. 
+        "label[1.2," .. (row_y + 0.4) .. ";#ffffff;" .. cfg.title .. "]" ..
+        "label[1.2, " .. (row_y + 0.8) .. ";#5c6e7e;OPERATIVE: " .. clean_giver .. "]" ..
+        "hypertext[1.2," .. (row_y + 1.15) .. ";6.8,0.7;desc_" .. q_id .. ";<global font=normal size=14 color=#b2c0cc>" .. cfg.description .. "]"
+        
+      -- Dynamic Reward Segment Card Frame
+      formspec = formspec ..
+        "box[8.3," .. (row_y + 0.25) .. ";3.5,1.5;#070a0d90]" .. -- Inner dark container
+        "label[8.6," .. (row_y + 0.6) .. ";#ffaa00;SECURED PAYLOAD]" ..
+        "item_image[8.6," .. (row_y + 0.85) .. ";0.8,0.8;" .. cfg.reward_item .. "]" ..
+        "label[9.6," .. (row_y + 1.35) .. ";#ffffff;x" .. cfg.reward_count .. " Gold]"
+      
+      row_y = row_y + 2.3 -- Offset space padding layout for next item row
+    end
   end
 
+  -- Fallback screen render layout frame when active assignment logs evaluate to empty
   if not has_active then
     formspec = formspec .. 
-      "box[3.5,3.5;5.0,2.0;#ffffff03]" ..
-      "label[4.2,4.3;#8899a6;No active assignments found.]" ..
-      "label[3.8,4.7;#00f0ff;Speak to local folks to find work.]"
+      "box[3.5,3.8;6.0,2.5;#ffffff02]" ..
+      "label[4.6,4.6;#8899a6;No active assignments found.]" ..
+      "label[4.1,5.1;#00f0ff;Speak to folks at the docks to find work.]"
   end
 
-  formspec = formspec .. "button[9.4,8.0;2.0,0.6;quit;Close Log]"
+  -- Persistent footer controls layout position
+  formspec = formspec .. "button[10.2,8.5;2.0,0.65;quit;Close Terminal]"
 
   core.show_formspec(player_name, "folks:quest_log", formspec)
 end
@@ -305,12 +358,25 @@ core.register_on_leaveplayer(function(player)
   folks.quests.hud_ids[name] = nil
 end)
 
+-- Live HUD Inventory Refresh Mechanics
 core.register_on_placenode(function(pos, newnode, placer)
   if placer and placer:is_player() then folks.quests.update_hud(placer) end
 end)
 
 core.register_on_dignode(function(pos, oldnode, digger)
   if digger and digger:is_player() then folks.quests.update_hud(digger) end
+end)
+
+-- Global step handler backup loop to handle loose custom node drop collection events seamlessly
+local update_timer = 0
+core.register_globalstep(function(dtime)
+  update_timer = update_timer + dtime
+  if update_timer < 2.0 then return end
+  update_timer = 0
+
+  for _, player in ipairs(core.get_connected_players()) do
+    folks.quests.update_hud(player)
+  end
 end)
 
 core.register_on_player_receive_fields(function(player, formname, fields)
