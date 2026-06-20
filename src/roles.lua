@@ -8,9 +8,15 @@ local modpath = core.get_modpath("folks")
 local ghoti_file = loadfile(modpath .. "/src/ghoti.lua")
 local ghoti = ghoti_file and ghoti_file()
 
--- Load the Quest System
+-- Load the Quest System Core Logic
 local quest_file = loadfile(modpath .. "/src/quests.lua")
 local quest_sys = quest_file and quest_file()
+
+-- Load the Quest Graphical User Interface Panel / Commands
+local quest_gui_file = loadfile(modpath .. "/src/quests_gui.lua")
+if quest_gui_file then
+  quest_gui_file()
+end
 
 -- Define your roles here
 roles.registry = {
