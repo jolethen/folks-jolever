@@ -39,21 +39,14 @@ local fish_pool = {
   {item = "fishing:fish_mackerel",       price = 9,   label = "Mackerel"}
 }
 
--- Tracks which active player session is looking at which NPC numerical tracking ID
-local player_current_npc = {}
+-- Market state management tracking
+ghoti.market = {
+  active_deals = {},  -- Structure layout: { item, price, label, stock, max_stock, out_of_stock_time }
+  last_roll_time = 0
+}
 
--- Safely triggers a persistent storage reload via your core folks API layer
-local function save_core_storage()
-  local modpath = core.get_modpath("folks")
-  local api_file = loadfile(modpath .. "/src/api.lua")
-  if api_file then
-    local env = getfenv(api_file)
-    if env and env.update_storage then env.update_storage() end
-  end
-end
-
--- Pick 5 unique fishes out of the pool and assign them to the specific NPC's framework data table
-local function refresh_ghoti_deals(npc_data)
+-- Pick 5 unique fishes out of the pool and assign them a random stock cap (1-10)
+local function refresh_ghoti_deals()
   local indices = {}
   while #indices < 5 do
     local rand_idx = math.random(1, #fish_pool)
@@ -66,31 +59,28 @@ local function refresh_ghoti_deals(npc_data)
     end
   end
 
-  npc_data._ghoti_active_deals = {}
+  ghoti.market.active_deals = {}
   for _, idx in ipairs(indices) do
     local base_fish = fish_pool[idx]
     local random_stock = math.random(1, 10)
     
-    table.insert(npc_data._ghoti_active_deals, {
+    table.insert(ghoti.market.active_deals, {
       item = base_fish.item,
       price = base_fish.price,
       label = base_fish.label,
       stock = random_stock,
       max_stock = random_stock,
-      out_of_stock_time = nil
+      out_of_stock_time = nil -- Tracks timestamp when this item drops to zero stock
     })
   end
-  npc_data._ghoti_last_roll_time = core.get_us_time()
-  save_core_storage()
+  ghoti.market.last_roll_time = core.get_us_time()
 end
 
 -- Checks if any depleted fish has been out of stock for 10 minutes (600 seconds)
-local function check_and_restock_items(npc_data)
-  if not npc_data._ghoti_active_deals then return end
+local function check_and_restock_items()
   local current_time = core.get_us_time()
-  local altered = false
   
-  for _, deal in ipairs(npc_data._ghoti_active_deals) do
+  for _, deal in ipairs(ghoti.market.active_deals) do
     if deal.stock == 0 and deal.out_of_stock_time then
       local seconds_elapsed = (current_time - deal.out_of_stock_time) / 1000000
       
@@ -98,140 +88,116 @@ local function check_and_restock_items(npc_data)
       if seconds_elapsed >= 600 then
         deal.stock = math.random(1, 10)
         deal.max_stock = deal.stock
-        deal.out_of_stock_time = nil
-        altered = true
+        deal.out_of_stock_time = nil -- Resets timer state cleanly
       end
     end
   end
-  
-  if altered then save_core_storage() end
 end
 
 -- Generate the graphical user interface layout
-function ghoti.show_formspec(player_name, npc_id)
-  local npc_data = folks.get_npc(npc_id)
-  if not npc_data then return end
-
-  check_and_restock_items(npc_data)
+function ghoti.show_formspec(player_name)
+  check_and_restock_items() -- Process sub-timers immediately before displaying the frame[cite: 6]
   
   local current_time = core.get_us_time()
-  local elapsed_seconds = (current_time - (npc_data._ghoti_last_roll_time or current_time)) / 1000000
-  local time_left_mins = math.max(0, math.floor(60 - (elapsed_seconds / 60)))
-  local npc_display_name = npc_data._npc_name or "Ghoti"
+  local elapsed_seconds = (current_time - ghoti.market.last_roll_time) / 1000000[cite: 6]
+  local time_left_mins = math.max(0, math.floor(60 - (elapsed_seconds / 60)))[cite: 6]
 
-  -- WIDENED FORMAT TO FIX TEXT OVERLAPS
+  -- Native clean layout using formspec_version 4+ specifications
   local formspec = 
-    "size[11.5,8.5]" ..
-    "real_coordinates[true]" ..
-    "title[0.5,0.4;" .. npc_display_name .. "'s Fish Market]" ..
-    "label[0.5,0.9;Offers refresh in: " .. time_left_mins .. " minutes]" ..
-    "box[0.5,1.2;10.5,0.02;#ffffff]"
+    "formspec_version[4]" ..
+    "size[11.5,9.0]" ..
+    "label[0.5,0.6;font_size=20;Ghoti's Fish Market]" ..
+    "label[0.5,1.2;Offers refresh in: " .. time_left_mins .. " minutes]" ..
+    "box[0.5,1.6;10.5,0.02;#ffffff]"
 
-  local row_y = 1.5
-  for i, deal in ipairs(npc_data._ghoti_active_deals or {}) do
-    local stock_info = "Stock: " .. deal.stock .. "/" .. deal.max_stock
-    local display_button = "button[9.0," .. row_y .. ";2.0,0.7;ghoti_sell_" .. i .. ";Sell 1x]"
+  local row_y = 1.9
+  for i, deal in ipairs(ghoti.market.active_deals) do
+    local stock_info = "Stock: " .. deal.stock .. "/" .. deal.max_stock[cite: 6]
+    local display_button = "button[9.0," .. row_y .. ";2.0,0.7;ghoti_sell_" .. i .. ";Sell 1x]"[cite: 6]
     
+    -- If out of stock, calculate remaining time on the cooldown[cite: 6]
     if deal.stock == 0 and deal.out_of_stock_time then
-      local elapsed = (current_time - deal.out_of_stock_time) / 1000000
-      local remaining_cooldown = math.max(0, math.floor(10 - (elapsed / 60)))
-      stock_info = "OUT OF STOCK (Restocking in " .. remaining_cooldown .. "m)"
-      display_button = "button_exit[9.0," .. row_y .. ";2.0,0.7;disabled;Sold Out]"
+      local elapsed = (current_time - deal.out_of_stock_time) / 1000000[cite: 6]
+      local remaining_cooldown = math.max(0, math.floor(10 - (elapsed / 60)))[cite: 6]
+      stock_info = "OUT OF STOCK (Restocking in " .. remaining_cooldown .. "m)"[cite: 6]
+      
+      -- Native unclickable close variant
+      display_button = "button[9.0," .. row_y .. ";2.0,0.7;disabled;Sold Out]"
     end
 
     formspec = formspec ..
-      "item_image[0.6," .. row_y .. ";0.8,0.8;" .. deal.item .. "]" ..
-      "label[1.6," .. (row_y + 0.1) .. ";" .. deal.label .. "]" ..
-      "label[1.6," .. (row_y + 0.45) .. ";" .. stock_info .. "]" ..
-      "label[5.8," .. (row_y + 0.25) .. ";Value: " .. deal.price .. " Gold]" ..
-      display_button
+      "item_image[0.6," .. row_y .. ";0.8,0.8;" .. deal.item .. "]" ..[cite: 6]
+      "label[1.6," .. (row_y + 0.15) .. ";" .. deal.label .. "]" ..
+      "label[1.6," .. (row_y + 0.5) .. ";" .. stock_info .. "]" ..
+      "label[5.8," .. (row_y + 0.3) .. ";Value: " .. deal.price .. " Minegeld]" ..
+      display_button[cite: 6]
       
-    row_y = row_y + 0.9
+    row_y = row_y + 0.95
   end
 
   formspec = formspec .. 
-    "box[0.5,6.0;10.5,0.02;#ffffff]" ..
-    "list[current_player;main;1.2,6.3;8,2;]" ..
-    "listring[current_player;main]"
+    "box[0.5,6.7;10.5,0.02;#ffffff]" ..
+    "list[current_player;main;1.7,7.0;8,2;]" ..
+    "listring[current_player;main]"[cite: 6]
 
   core.show_formspec(player_name, "folks:ghoti_market", formspec)
 end
 
--- This executes when Ghoti is right-clicked via the roles engine configuration hook
-function ghoti.on_interact(player, npc_id)
-  local npc_data = folks.get_npc(npc_id)
-  if not npc_data then return end
-
-  local player_name = player:get_player_name()
-  player_current_npc[player_name] = npc_id
-
+-- This executes when Ghoti is right-clicked via the roles engine
+function ghoti.on_interact(player)
   local current_time = core.get_us_time()
-  local elapsed = (current_time - (npc_data._ghoti_last_roll_time or 0)) / 1000000
+  local elapsed = (current_time - ghoti.market.last_roll_time) / 1000000[cite: 6]
   
-  -- Total pool rotation trigger (1 hour) maps to framework table layout properties
-  if not npc_data._ghoti_active_deals or #npc_data._ghoti_active_deals == 0 or elapsed >= 3600 then
-    refresh_ghoti_deals(npc_data)
+  -- Total pool rotation trigger (1 hour)[cite: 6]
+  if #ghoti.market.active_deals == 0 or elapsed >= 3600 then[cite: 6]
+    refresh_ghoti_deals()
   else
-    check_and_restock_items(npc_data)
+    check_and_restock_items()[cite: 6]
   end
 
-  ghoti.show_formspec(player_name, npc_id)
+  ghoti.show_formspec(player:get_player_name())[cite: 6]
 end
 
 -- Formspec UI Intercept Event Handler
 core.register_on_player_receive_fields(function(player, formname, fields)
-  if formname ~= "folks:ghoti_market" then return false end
-  local player_name = player:get_player_name()
-
-  local npc_id = player_current_npc[player_name]
-  local npc_data = folks.get_npc(npc_id)
-  if not npc_data then return true end
-
-  if fields.quit then
-    player_current_npc[player_name] = nil
-    return true
-  end
-
-  local npc_display_name = npc_data._npc_name or "Ghoti"
+  if formname ~= "folks:ghoti_market" then return false end[cite: 6]
+  local player_name = player:get_player_name()[cite: 6]
 
   for i = 1, 5 do
-    if fields["ghoti_sell_" .. i] then
-      check_and_restock_items(npc_data)
+    if fields["ghoti_sell_" .. i] then[cite: 6]
+      check_and_restock_items() -- Process background timers inside response loop[cite: 6]
       
-      local deal = npc_data._ghoti_active_deals[i]
+      local deal = ghoti.market.active_deals[i][cite: 6]
       
-      if deal and deal.stock > 0 then
-        local inv = player:get_inventory()
+      -- Guard condition preventing nil index crashes or cheating empty stocks[cite: 6]
+      if deal and deal.stock > 0 then[cite: 6]
+        local inv = player:get_inventory()[cite: 6]
         
-        if inv:contains_item("main", ItemStack(deal.item)) then
-          inv:remove_item("main", ItemStack(deal.item .. " 1"))
+        if inv:contains_item("main", ItemStack(deal.item)) then[cite: 6]
+          inv:remove_item("main", ItemStack(deal.item .. " 1"))[cite: 6]
           
-          deal.stock = deal.stock - 1
+          -- Deduct item stock pool[cite: 6]
+          deal.stock = deal.stock - 1[cite: 6]
           
-          if deal.stock == 0 then
-            deal.out_of_stock_time = core.get_us_time()
+          -- Initialize the unique 10-minute cooldown if item hits zero stock[cite: 6]
+          if deal.stock == 0 then[cite: 6]
+            deal.out_of_stock_time = core.get_us_time()[cite: 6]
           end
-
-          -- Economy reward targeting the standard currency mod namespace format
+          
+          -- Economy rewards messaging hook (Targeting Minegeld economy items)
           inv:add_item("main", ItemStack("currency:minegeld " .. deal.price))
+          core.chat_send_player(player_name, core.colorize("#00ff00", "Ghoti: Thanks! Here is your " .. deal.price .. " Minegeld for the " .. deal.label .. "."))
           
-          core.chat_send_player(player_name, core.colorize("#00ff00", npc_display_name .. ": Thanks! Here is your " .. deal.price .. " Gold for the " .. deal.label .. "."))
-          
-          save_core_storage()
-          ghoti.show_formspec(player_name, npc_id)
+          ghoti.show_formspec(player_name)[cite: 6]
         else
-          core.chat_send_player(player_name, core.colorize("#ff3333", npc_display_name .. ": You don't have any " .. deal.label .. " in your bag!"))
+          core.chat_send_player(player_name, core.colorize("#ff3333", "Ghoti: You don't have any " .. deal.label .. " in your bag!"))[cite: 6]
         end
-      elseif deal and deal.stock == 0 then
-        core.chat_send_player(player_name, core.colorize("#ff3333", npc_display_name .. ": I cannot buy more of that right now. I am completely full!"))
+      elseif deal and deal.stock == 0 then[cite: 6]
+        core.chat_send_player(player_name, core.colorize("#ff3333", "Ghoti: I cannot buy more of that right now. I am completely full!"))[cite: 6]
       end
-      return true
+      return true[cite: 6]
     end
   end
 end)
 
-core.register_on_leaveplayer(function(player)
-  player_current_npc[player:get_player_name()] = nil
-end)
-
-return ghoti
+return ghoti[cite: 6]
