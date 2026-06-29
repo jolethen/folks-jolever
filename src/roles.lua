@@ -1,5 +1,5 @@
 -- roles.lua
-local roles = {}
+roles = {} -- Fixed: Exposed globally so the folks engine can read this registry
 
 -- Safely locate and load the external specialized scripts
 local modpath = core.get_modpath("folks")
@@ -51,7 +51,8 @@ roles.registry = {
     -- Handled via separate clean mod script chunk
     action = function(player, npc_self)
       if ghoti then
-        ghoti.on_interact(player)
+        -- Fixed: Added npc_self parameter to support independent shop inventories
+        ghoti.on_interact(player, npc_self)
       else
         core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Fisherman module failed to load."))
       end
