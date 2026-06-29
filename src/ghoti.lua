@@ -3,72 +3,75 @@ local S = core.get_translator("folks")
 
 local ghoti = {}
 
--- 1. Complete fish pool table (All prices strictly set to 5 Minegeld)
+-- 1. Complete fish pool table (Using absolute external literals for the 'fishing' mod namespace)
 local fish_pool = {
-  {item = "fishing:fish_bluefin",        price = 5,  label = "Bluefin Tuna"},
-  {item = "fishing:fish_blueram",        price = 5,  label = "Blue Ram Cichlid"},
-  {item = "fishing:fish_catfish",        price = 5,  label = "Catfish"},
-  {item = "fishing:fish_plaice",         price = 5,  label = "Plaice"},
-  {item = "fishing:fish_salmon",         price = 5,  label = "Salmon"},
-  {item = "fishing:fish_clownfish",      price = 5,  label = "Clownfish"},
-  {item = "fishing:fish_pike",           price = 5,  label = "Pike"},
-  {item = "fishing:fish_flathead",       price = 5,  label = "Flathead Fish"},
-  {item = "fishing:fish_pufferfish",     price = 5,  label = "Pufferfish"},
-  {item = "fishing:fish_cichlid",        price = 5,  label = "Cichlid"},
-  {item = "fishing:fish_coy",            price = 5,  label = "Coy Fish"},
-  {item = "fishing:fish_tilapia",        price = 5,  label = "Tilapia"},
-  {item = "fishing:fish_trevally",       price = 5,  label = "Trevally"},
-  {item = "fishing:fish_angler",         price = 5,  label = "Anglerfish"},
-  {item = "fishing:fish_jellyfish",      price = 5,  label = "Jellyfish"},
-  {item = "fishing:fish_seahorse",       price = 5,  label = "Seahorse"},
-  {item = "fishing:fish_seahorse_green", price = 5,  label = "Green Seahorse"},
-  {item = "fishing:fish_seahorse_pink",  price = 5,  label = "Pink Seahorse"},
-  {item = "fishing:fish_seahorse_blue",  price = 5,  label = "Blue Seahorse"},
-  {item = "fishing:fish_seahorse_yellow",price = 5,  label = "Yellow Seahorse"},
-  {item = "fishing:fish_parrot",         price = 5,  label = "Parrotfish"},
-  {item = "fishing:fish_piranha",        price = 5,  label = "Piranha"},
-  {item = "fishing:fish_tuna",           price = 5,  label = "Tuna"},
-  {item = "fishing:fish_trout",          price = 5,  label = "Trout"},
-  {item = "fishing:fish_cod",            price = 5,  label = "Raw Cod"},
-  {item = "fishing:fish_flounder",       price = 5,  label = "Flounder"},
-  {item = "fishing:fish_redsnapper",     price = 5,  label = "Red Snapper"},
-  {item = "fishing:fish_squid",          price = 5,  label = "Squid"},
-  {item = "fishing:fish_shrimp",         price = 5,  label = "Shrimp"},
-  {item = "fishing:fish_carp",           price = 5,  label = "Carp"},
-  {item = "fishing:fish_tetra",          price = 5,  label = "Neon Tetra"},
-  {item = "fishing:fish_mackerel",       price = 5,  label = "Mackerel"}
+  {item = "fishing:fish_bluefin",        price = 20,  label = "Bluefin Tuna"},
+  {item = "fishing:fish_blueram",        price = 15,  label = "Blue Ram Cichlid"},
+  {item = "fishing:fish_catfish",        price = 18,  label = "Catfish"},
+  {item = "fishing:fish_plaice",         price = 11,  label = "Plaice"},
+  {item = "fishing:fish_salmon",         price = 15,  label = "Salmon"},
+  {item = "fishing:fish_clownfish",      price = 14,  label = "Clownfish"},
+  {item = "fishing:fish_pike",           price = 24,  label = "Pike"},
+  {item = "fishing:fish_flathead",       price = 16,  label = "Flathead Fish"},
+  {item = "fishing:fish_pufferfish",     price = 28,  label = "Pufferfish"},
+  {item = "fishing:fish_cichlid",        price = 12,  label = "Cichlid"},
+  {item = "fishing:fish_coy",            price = 25,  label = "Coy Fish"},
+  {item = "fishing:fish_tilapia",        price = 13,  label = "Tilapia"},
+  {item = "fishing:fish_trevally",       price = 17,  label = "Trevally"},
+  {item = "fishing:fish_angler",         price = 45,  label = "Anglerfish"},
+  {item = "fishing:fish_jellyfish",      price = 30,  label = "Jellyfish"},
+  {item = "fishing:fish_seahorse",       price = 20,  label = "Seahorse"},
+  {item = "fishing:fish_seahorse_green", price = 22,  label = "Green Seahorse"},
+  {item = "fishing:fish_seahorse_pink",  price = 22,  label = "Pink Seahorse"},
+  {item = "fishing:fish_seahorse_blue",  price = 25,  label = "Blue Seahorse"},
+  {item = "fishing:fish_seahorse_yellow",price = 22,  label = "Yellow Seahorse"},
+  {item = "fishing:fish_parrot",         price = 22,  label = "Parrotfish"},
+  {item = "fishing:fish_piranha",        price = 35,  label = "Piranha"},
+  {item = "fishing:fish_tuna",           price = 18,  label = "Tuna"},
+  {item = "fishing:fish_trout",          price = 14,  label = "Trout"},
+  {item = "fishing:fish_cod",            price = 8,   label = "Raw Cod"},
+  {item = "fishing:fish_flounder",       price = 14,  label = "Flounder"},
+  {item = "fishing:fish_redsnapper",     price = 20,  label = "Red Snapper"},
+  {item = "fishing:fish_squid",          price = 32,  label = "Squid"},
+  {item = "fishing:fish_shrimp",         price = 6,   label = "Shrimp"},
+  {item = "fishing:fish_carp",           price = 10,  label = "Carp"},
+  {item = "fishing:fish_tetra",          price = 7,   label = "Neon Tetra"},
+  {item = "fishing:fish_mackerel",       price = 9,   label = "Mackerel"}
 }
 
--- Instance directory tracking individual state per unique NPC ID
-ghoti.markets = {}
-
--- Tracks which player is talking to which unique NPC ID
+-- Tracks which active player session is looking at which NPC numerical tracking ID
 local player_current_npc = {}
 
--- FIXED FLAW 1: Safe shuffling algorithm. No brute-force "while" stalling loops.
-local function refresh_npc_deals(npc_id)
-  -- Create a pool of available indices
-  local pool_indices = {}
-  for i = 1, #fish_pool do
-    pool_indices[i] = i
+-- Safely triggers a persistent storage reload via your core folks API layer
+local function save_core_storage()
+  local modpath = core.get_modpath("folks")
+  local api_file = loadfile(modpath .. "/src/api.lua")
+  if api_file then
+    local env = getfenv(api_file)
+    if env and env.update_storage then env.update_storage() end
+  end
+end
+
+-- Pick 5 unique fishes out of the pool and assign them to the specific NPC's framework data table
+local function refresh_ghoti_deals(npc_data)
+  local indices = {}
+  while #indices < 5 do
+    local rand_idx = math.random(1, #fish_pool)
+    local exists = false
+    for _, v in ipairs(indices) do
+      if v == rand_idx then exists = true break end
+    end
+    if not exists then
+      table.insert(indices, rand_idx)
+    end
   end
 
-  ghoti.markets[npc_id] = {
-    active_deals = {},
-    -- FIXED FLAW 2: Replaced volatile core.get_us_time() with native game seconds integer
-    last_roll_time = core.get_gametime()
-  }
-
-  -- Select 5 unique items by plucking them directly out of the index pool
-  for i = 1, 5 do
-    if #pool_indices == 0 then break end
-    local rand_pos = math.random(1, #pool_indices)
-    local fish_idx = table.remove(pool_indices, rand_pos)
-    
-    local base_fish = fish_pool[fish_idx]
+  npc_data._ghoti_active_deals = {}
+  for _, idx in ipairs(indices) do
+    local base_fish = fish_pool[idx]
     local random_stock = math.random(1, 10)
     
-    table.insert(ghoti.markets[npc_id].active_deals, {
+    table.insert(npc_data._ghoti_active_deals, {
       item = base_fish.item,
       price = base_fish.price,
       label = base_fish.label,
@@ -77,153 +80,145 @@ local function refresh_npc_deals(npc_id)
       out_of_stock_time = nil
     })
   end
+  npc_data._ghoti_last_roll_time = core.get_us_time()
+  save_core_storage()
 end
 
--- Checks and restocks items for a SPECIFIC NPC
-local function check_and_restock_items(npc_id)
-  local market = ghoti.markets[npc_id]
-  if not market then return end
-
-  -- FIXED FLAW 2: Uses standard game seconds tracking instead of microseconds
-  local current_time = core.get_gametime()
+-- Checks if any depleted fish has been out of stock for 10 minutes (600 seconds)
+local function check_and_restock_items(npc_data)
+  if not npc_data._ghoti_active_deals then return end
+  local current_time = core.get_us_time()
+  local altered = false
   
-  for _, deal in ipairs(market.active_deals) do
+  for _, deal in ipairs(npc_data._ghoti_active_deals) do
     if deal.stock == 0 and deal.out_of_stock_time then
-      local seconds_elapsed = current_time - deal.out_of_stock_time
+      local seconds_elapsed = (current_time - deal.out_of_stock_time) / 1000000
       
-      if seconds_elapsed >= 600 then -- 10 Minutes (600 seconds)
+      -- 10 minutes = 600 seconds
+      if seconds_elapsed >= 600 then
         deal.stock = math.random(1, 10)
         deal.max_stock = deal.stock
         deal.out_of_stock_time = nil
+        altered = true
       end
     end
   end
+  
+  if altered then save_core_storage() end
 end
 
--- Generate user interface layout matching formspecs.lua perfectly
-function ghoti.get_market_formspec(npc_id, npc_display_name)
-  check_and_restock_items(npc_id)
+-- Generate the graphical user interface layout
+function ghoti.show_formspec(player_name, npc_id)
+  local npc_data = folks.get_npc(npc_id)
+  if not npc_data then return end
+
+  check_and_restock_items(npc_data)
   
-  local market = ghoti.markets[npc_id]
-  if not market then return "" end
-
-  -- FIXED FLAW 2: Fixed mathematical layout calculations via clean seconds math
-  local current_time = core.get_gametime()
-  local elapsed_seconds = current_time - market.last_roll_time
+  local current_time = core.get_us_time()
+  local elapsed_seconds = (current_time - (npc_data._ghoti_last_roll_time or current_time)) / 1000000
   local time_left_mins = math.max(0, math.floor(60 - (elapsed_seconds / 60)))
-  local escape = core.formspec_escape
+  local npc_display_name = npc_data._npc_name or "Ghoti"
 
-  -- FIXED FLAW 4: All local translation blocks are now strictly escaped to block UI break injections
-  local formspec = {
-    "formspec_version[3]",
-    "size[11,11]",
-    "label[4.0,0.8;" .. escape(npc_display_name .. "'s Fish Market") .. "]",
-    "label[1.0,1.5;" .. escape(S("Offers refresh in: @1 minutes", time_left_mins)) .. "]",
-  }
+  -- WIDENED FORMAT TO FIX TEXT OVERLAPS
+  local formspec = 
+    "size[11.5,8.5]" ..
+    "real_coordinates[true]" ..
+    "title[0.5,0.4;" .. npc_display_name .. "'s Fish Market]" ..
+    "label[0.5,0.9;Offers refresh in: " .. time_left_mins .. " minutes]" ..
+    "box[0.5,1.2;10.5,0.02;#ffffff]"
 
-  local row_y = 2.2
-  for i, deal in ipairs(market.active_deals) do
+  local row_y = 1.5
+  for i, deal in ipairs(npc_data._ghoti_active_deals or {}) do
     local stock_info = "Stock: " .. deal.stock .. "/" .. deal.max_stock
-    local display_button = "button[8.5," .. row_y .. ";1.8,0.7;ghoti_sell_" .. i .. ";Sell 1x]"
+    local display_button = "button[9.0," .. row_y .. ";2.0,0.7;ghoti_sell_" .. i .. ";Sell 1x]"
     
     if deal.stock == 0 and deal.out_of_stock_time then
-      local elapsed = current_time - deal.out_of_stock_time
+      local elapsed = (current_time - deal.out_of_stock_time) / 1000000
       local remaining_cooldown = math.max(0, math.floor(10 - (elapsed / 60)))
-      stock_info = "SOLD OUT (Restocking in " .. remaining_cooldown .. "m)"
-      display_button = "button_exit[8.5," .. row_y .. ";1.8,0.7;disabled;Sold Out]"
+      stock_info = "OUT OF STOCK (Restocking in " .. remaining_cooldown .. "m)"
+      display_button = "button_exit[9.0," .. row_y .. ";2.0,0.7;disabled;Sold Out]"
     end
 
-    table.insert(formspec, "item_image[1.0," .. row_y .. ";0.8,0.8;" .. deal.item .. "]")
-    table.insert(formspec, "label[2.0," .. (row_y + 0.05) .. ";" .. escape(deal.label) .. "]")
-    table.insert(formspec, "label[2.0," .. (row_y + 0.45) .. ";" .. escape(stock_info) .. "]")
-    table.insert(formspec, "label[5.5," .. (row_y + 0.25) .. ";Value: " .. deal.price .. " Minegeld]")
-    table.insert(formspec, display_button)
+    formspec = formspec ..
+      "item_image[0.6," .. row_y .. ";0.8,0.8;" .. deal.item .. "]" ..
+      "label[1.6," .. (row_y + 0.1) .. ";" .. deal.label .. "]" ..
+      "label[1.6," .. (row_y + 0.45) .. ";" .. stock_info .. "]" ..
+      "label[5.8," .. (row_y + 0.25) .. ";Value: " .. deal.price .. " Gold]" ..
+      display_button
       
-    row_y = row_y + 1.0
+    row_y = row_y + 0.9
   end
 
-  table.insert(formspec, "list[current_player;main;1.5,7.8;8,2;]")
-  table.insert(formspec, "listring[current_player;main]")
-  table.insert(formspec, "button_exit[9.5,0.5;1,0.75;folks_close_market;X]")
+  formspec = formspec .. 
+    "box[0.5,6.0;10.5,0.02;#ffffff]" ..
+    "list[current_player;main;1.2,6.3;8,2;]" ..
+    "listring[current_player;main]"
 
-  return table.concat(formspec)
+  core.show_formspec(player_name, "folks:ghoti_market", formspec)
 end
 
--- Central interaction handler called by your NPCs
-function ghoti.on_interact(player, npc_id, npc_display_name)
-  local player_name = player:get_player_name()
-  player_current_npc[player_name] = { id = npc_id, name = npc_display_name }
+-- This executes when Ghoti is right-clicked via the roles engine configuration hook
+function ghoti.on_interact(player, npc_id)
+  local npc_data = folks.get_npc(npc_id)
+  if not npc_data then return end
 
-  local market = ghoti.markets[npc_id]
-  local current_time = core.get_gametime()
+  local player_name = player:get_player_name()
+  player_current_npc[player_name] = npc_id
+
+  local current_time = core.get_us_time()
+  local elapsed = (current_time - (npc_data._ghoti_last_roll_time or 0)) / 1000000
   
-  if not market then
-    refresh_npc_deals(npc_id)
+  -- Total pool rotation trigger (1 hour) maps to framework table layout properties
+  if not npc_data._ghoti_active_deals or #npc_data._ghoti_active_deals == 0 or elapsed >= 3600 then
+    refresh_ghoti_deals(npc_data)
   else
-    local elapsed = current_time - market.last_roll_time
-    if elapsed >= 3600 then -- 1 Hour (3600 seconds)
-      refresh_npc_deals(npc_id)
-    else
-      check_and_restock_items(npc_id)
-    end
+    check_and_restock_items(npc_data)
   end
 
-  local fs = ghoti.get_market_formspec(npc_id, npc_display_name)
-  core.show_formspec(player_name, "folks:ghoti_market", fs)
+  ghoti.show_formspec(player_name, npc_id)
 end
 
 -- Formspec UI Intercept Event Handler
 core.register_on_player_receive_fields(function(player, formname, fields)
   if formname ~= "folks:ghoti_market" then return false end
   local player_name = player:get_player_name()
-  
-  local npc_context = player_current_npc[player_name]
-  if not npc_context then return true end
-  
-  local npc_id = npc_context.id
-  local npc_display_name = npc_context.name
-  local market = ghoti.markets[npc_id]
-  if not market then return true end
 
-  if fields.folks_close_market or fields.quit then
+  local npc_id = player_current_npc[player_name]
+  local npc_data = folks.get_npc(npc_id)
+  if not npc_data then return true end
+
+  if fields.quit then
     player_current_npc[player_name] = nil
     return true
   end
 
+  local npc_display_name = npc_data._npc_name or "Ghoti"
+
   for i = 1, 5 do
     if fields["ghoti_sell_" .. i] then
-      check_and_restock_items(npc_id)
+      check_and_restock_items(npc_data)
       
-      local deal = market.active_deals[i]
+      local deal = npc_data._ghoti_active_deals[i]
       
       if deal and deal.stock > 0 then
         local inv = player:get_inventory()
         
         if inv:contains_item("main", ItemStack(deal.item)) then
-          -- FIXED FLAW 3: Validate inventory room BEFORE taking items so payouts aren't voided
-          local payout_stack = ItemStack("currency:minegeld 5")
-          
-          -- Simulate taking 1 fish away to see if the cash fits cleanly in the remaining space
           inv:remove_item("main", ItemStack(deal.item .. " 1"))
           
-          if inv:room_for_item("main", payout_stack) then
-            -- Transaction Approved
-            inv:add_item("main", payout_stack)
-            
-            deal.stock = deal.stock - 1
-            if deal.stock == 0 then
-              deal.out_of_stock_time = core.get_gametime()
-            end
-            
-            core.chat_send_player(player_name, core.colorize("#00ff00", npc_display_name .. ": Thanks! Here is your 5 Minegeld for the " .. deal.label .. "."))
-          else
-            -- FIXED FLAW 3: Revert the removed fish if your inventory cannot hold the payment cash safely
-            inv:add_item("main", ItemStack(deal.item .. " 1"))
-            core.chat_send_player(player_name, core.colorize("#ff3333", npc_display_name .. ": Your bag is too full to receive this payment! Clear out some space first."))
-          end
+          deal.stock = deal.stock - 1
           
-          local fs = ghoti.get_market_formspec(npc_id, npc_display_name)
-          core.show_formspec(player_name, "folks:ghoti_market", fs)
+          if deal.stock == 0 then
+            deal.out_of_stock_time = core.get_us_time()
+          end
+
+          -- Economy reward targeting the standard currency mod namespace format
+          inv:add_item("main", ItemStack("currency:minegeld " .. deal.price))
+          
+          core.chat_send_player(player_name, core.colorize("#00ff00", npc_display_name .. ": Thanks! Here is your " .. deal.price .. " Gold for the " .. deal.label .. "."))
+          
+          save_core_storage()
+          ghoti.show_formspec(player_name, npc_id)
         else
           core.chat_send_player(player_name, core.colorize("#ff3333", npc_display_name .. ": You don't have any " .. deal.label .. " in your bag!"))
         end
@@ -235,26 +230,8 @@ core.register_on_player_receive_fields(function(player, formname, fields)
   end
 end)
 
--- Clean up player context dictionary when they leave
 core.register_on_leaveplayer(function(player)
   player_current_npc[player:get_player_name()] = nil
-end)
-
--- FIXED FLAW 5: Periodic Memory Sanitation Loop
--- Sweeps all memory blocks every 30 minutes to garbage-collect stale NPC shop profiles
-local sweep_timer = 0
-core.register_globalstep(function(dtime)
-  sweep_timer = sweep_timer + dtime
-  if sweep_timer < 1800 then return end
-  sweep_timer = 0
-
-  local current_time = core.get_gametime()
-  for npc_id, market in pairs(ghoti.markets) do
-    -- If an NPC hasn't been re-rolled or looked at for more than 2 hours, purge its cache data completely
-    if current_time - market.last_roll_time > 7200 then
-      ghoti.markets[npc_id] = nil
-    end
-  end
 end)
 
 return ghoti
