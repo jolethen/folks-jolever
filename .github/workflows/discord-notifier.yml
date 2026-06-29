@@ -1,0 +1,19 @@
+name: Discord Notifier
+
+on:
+  push:
+    branches:
+      - main  # Change this if your default branch is named master or something else
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          severity: info
+          details: 'A new commit has been pushed!'
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          avatarUrl: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          username: 'GitHub'
