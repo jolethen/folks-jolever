@@ -1,91 +1,107 @@
 -- roles.lua
 roles = {} -- Exposed globally so the folks engine can read this registry
 
--- Safely locate and load the external specialized scripts
-local modpath = core.get_modpath("folks")
+-- Safely locate and load the external specialized scripts[cite: 2]
+local modpath = core.get_modpath("folks")[cite: 2]
 
--- Load Ghoti (Fisherman Shop)
-local ghoti_file = loadfile(modpath .. "/src/ghoti.lua")
-local ghoti = ghoti_file and ghoti_file()
+-- Load Ghoti (Fisherman Shop Engine)[cite: 2]
+local ghoti_file = loadfile(modpath .. "/src/ghoti.lua")[cite: 2]
+local ghoti = ghoti_file and ghoti_file()[cite: 2]
 
--- Load the Quest System Core Logic
-local quest_file = loadfile(modpath .. "/src/quests.lua")
-local quest_sys = quest_file and quest_file()
+-- Load the Quest System Core Logic[cite: 2]
+local quest_file = loadfile(modpath .. "/src/quests.lua")[cite: 2]
+local quest_sys = quest_file and quest_file()[cite: 2]
 
--- Load the Quest Graphical User Interface Panel / Commands
-local quest_gui_file = loadfile(modpath .. "/src/quests_gui.lua")
-if quest_gui_file then
-  quest_gui_file()
-end
+-- Load the Quest Graphical User Interface Panel / Commands[cite: 2]
+local quest_gui_file = loadfile(modpath .. "/src/quests_gui.lua")[cite: 2]
+if quest_gui_file then[cite: 2]
+  quest_gui_file()[cite: 2]
+end[cite: 2]
 
--- Reusable interaction handler for all fisherman NPCs
-local handle_fisherman = function(player, npc_self)
-  if ghoti then
-    ghoti.on_interact(player, npc_self)
-  else
-    core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Fisherman module failed to load."))
-  end
-end
-
--- Define your roles here
+-- Define your roles here[cite: 2]
 roles.registry = {
-  -- Map all your distinct fisherman names to the same dynamic handler
-  ["ghoti"]    = { action = handle_fisherman },
-  ["allison"]  = { action = handle_fisherman },
-  ["phillips"] = { action = handle_fisherman },
-  ["jack"]     = { action = handle_fisherman },
-  ["david"]    = { action = handle_fisherman },
-  ["felix"]    = { action = handle_fisherman },
-  ["james"]    = { action = handle_fisherman },
-  ["walker"]   = { action = handle_fisherman },
+  -- INDEPENDENT REGISTRATIONS: Each name is its own distinct role entry
+  ["ghoti"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self)[cite: 2]
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Ghoti module failed.") end
+    end
+  },
+  ["allison"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self) 
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Allison module failed.") end
+    end
+  },
+  ["phillips"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self) 
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Phillips module failed.") end
+    end
+  },
+  ["jack"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self) 
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Jack module failed.") end
+    end
+  },
+  ["david"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self) 
+      else core.chat_send_player(player:get_player_name(), "[System Error]: David module failed.") end
+    end
+  },
+  ["felix"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self) 
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Felix module failed.") end
+    end
+  },
+  ["james"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self) 
+      else core.chat_send_player(player:get_player_name(), "[System Error]: James module failed.") end
+    end
+  },
+  ["walker"] = {
+    action = function(player, npc_self)
+      if ghoti then ghoti.on_interact(player, npc_self) 
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Walker module failed.") end
+    end
+  },
 
-  ["banker"] = {
-    -- This function runs when the player right-clicks a banker
-    action = function(player, npc_self)
-      local player_name = player:get_player_name()
-      
-      -- Define a unique name for this formspec session
-      local formspec_name = "folks:bank_interface"
-      
-      -- Designing a clean, standard 6x4 container UI
-      local formspec = 
-        "size[6,4]" ..
-        "real_coordinates[true]" ..
-        -- Centered Header Text
-        "label[2.5,0.5;Bank]" .. 
-        -- A decorative separator line or box style indicator
-        "box[0.5,1.0;5,0.05;#ffffff]" ..
-        -- Placeholder content text inside the bank window
-        "label[0.5,1.8;Welcome to the banking terminal!]" ..
-        "label[0.5,2.3;Account services will appear here.]" ..
-        -- An exit button to cleanly dismiss the screen
-        "button_exit[2.0,3.2;2.0,0.6;close;Exit]"
-        
-      -- Render the UI safely to the player's screen
-      core.show_formspec(player_name, formspec_name, formspec)
-    end
-  },
+  ["banker"] = {[cite: 2]
+    action = function(player, npc_self)[cite: 2]
+      local player_name = player:get_player_name()[cite: 2]
+      local formspec_name = "folks:bank_interface"[cite: 2]
+      local formspec = [cite: 2]
+        "size[6,4]" ..[cite: 2]
+        "real_coordinates[true]" ..[cite: 2]
+        "label[2.5,0.5;Bank]" .. [cite: 2]
+        "box[0.5,1.0;5,0.05;#ffffff]" ..[cite: 2]
+        "label[0.5,1.8;Welcome to the banking terminal!]" ..[cite: 2]
+        "label[0.5,2.3;Account services will appear here.]" ..[cite: 2]
+        "button_exit[2.0,3.2;2.0,0.6;close;Exit]"[cite: 2]
+      core.show_formspec(player_name, formspec_name, formspec)[cite: 2]
+    end[cite: 2]
+  },[cite: 2]
   
-  ["quester"] = {
-    -- Central Operational Taskmaster role
-    action = function(player, npc_self)
-      if quest_sys then
-        -- Passes the clean name string "Quester" to match the database logic
-        quest_sys.handle_npc_interaction(player, "Quester")
-      else
-        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Quest subsystem failed to load."))
-      end
-    end
-  },
+  ["quester"] = {[cite: 2]
+    action = function(player, npc_self)[cite: 2]
+      if quest_sys then[cite: 2]
+        quest_sys.handle_npc_interaction(player, "Quester")[cite: 2]
+      else[cite: 2]
+        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Quest subsystem failed to load."))[cite: 2]
+      end[cite: 2]
+    end[cite: 2]
+  },[cite: 2]
   
-  ["doctor"] = {
-    -- Example of an extra role you can easily add later!
-    action = function(player, npc_self)
-      -- Heal the player completely
-      player:set_hp(player:get_properties().hp_max)
-      core.chat_send_player(player:get_player_name(), "The Doctor has healed you!")
-    end
-  },
+  ["doctor"] = {[cite: 2]
+    action = function(player, npc_self)[cite: 2]
+      player:set_hp(player:get_properties().hp_max)[cite: 2]
+      core.chat_send_player(player:get_player_name(), "The Doctor has healed you!")[cite: 2]
+    end[cite: 2]
+  },[cite: 2]
 }
 
-return roles
+return roles[cite: 2]
