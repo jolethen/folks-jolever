@@ -1,26 +1,20 @@
 -- roles.lua
-roles = {} -- Exposed globally so the folks engine can read this registry
+roles = {}
 
--- Safely locate and load the external specialized scripts
 local modpath = core.get_modpath("folks")
 
--- Load Ghoti (Fisherman Shop Engine)
 local ghoti_file = loadfile(modpath .. "/src/ghoti.lua")
 local ghoti = ghoti_file and ghoti_file()
 
--- Load the Quest System Core Logic
 local quest_file = loadfile(modpath .. "/src/quests.lua")
 local quest_sys = quest_file and quest_file()
 
--- Load the Quest Graphical User Interface Panel / Commands
 local quest_gui_file = loadfile(modpath .. "/src/quests_gui.lua")
 if quest_gui_file then
   quest_gui_file()
 end
 
--- Define your roles here
 roles.registry = {
-  -- INDEPENDENT REGISTRATIONS: Each name is its own distinct role entry
   ["ghoti"] = {
     action = function(player, npc_self)
       if ghoti then ghoti.on_interact(player, npc_self)
