@@ -1,5 +1,5 @@
 -- roles.lua
-roles = {} -- Fixed: Exposed globally so the folks engine can read this registry
+roles = {} -- Exposed globally so the folks engine can read this registry
 
 -- Safely locate and load the external specialized scripts
 local modpath = core.get_modpath("folks")
@@ -18,8 +18,27 @@ if quest_gui_file then
   quest_gui_file()
 end
 
+-- Reusable interaction handler for all fisherman NPCs
+local handle_fisherman = function(player, npc_self)
+  if ghoti then
+    ghoti.on_interact(player, npc_self)
+  else
+    core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Fisherman module failed to load."))
+  end
+end
+
 -- Define your roles here
 roles.registry = {
+  -- Map all your distinct fisherman names to the same dynamic handler
+  ["ghoti"]    = { action = handle_fisherman },
+  ["allison"]  = { action = handle_fisherman },
+  ["phillips"] = { action = handle_fisherman },
+  ["jack"]     = { action = handle_fisherman },
+  ["david"]    = { action = handle_fisherman },
+  ["felix"]    = { action = handle_fisherman },
+  ["james"]    = { action = handle_fisherman },
+  ["walker"]   = { action = handle_fisherman },
+
   ["banker"] = {
     -- This function runs when the player right-clicks a banker
     action = function(player, npc_self)
@@ -44,18 +63,6 @@ roles.registry = {
         
       -- Render the UI safely to the player's screen
       core.show_formspec(player_name, formspec_name, formspec)
-    end
-  },
-  
-  ["ghoti"] = {
-    -- Handled via separate clean mod script chunk
-    action = function(player, npc_self)
-      if ghoti then
-        -- Fixed: Added npc_self parameter to support independent shop inventories
-        ghoti.on_interact(player, npc_self)
-      else
-        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Fisherman module failed to load."))
-      end
     end
   },
   
