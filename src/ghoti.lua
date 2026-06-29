@@ -3,7 +3,7 @@ local S = core.get_translator("folks")
 
 local ghoti = {}
 
--- 1. Complete fish pool table (Using absolute external literals for the 'fishing' mod namespace)
+-- 1. Complete fish pool table (Original working variables and item prices)
 local fish_pool = {
   {item = "fishing:fish_bluefin",        price = 20,  label = "Bluefin Tuna"},
   {item = "fishing:fish_blueram",        price = 15,  label = "Blue Ram Cichlid"},
@@ -39,14 +39,14 @@ local fish_pool = {
   {item = "fishing:fish_mackerel",       price = 9,   label = "Mackerel"}
 }
 
--- Market state management tracking
+-- Global market state table
 ghoti.market = {
-  active_deals = {},  -- Structure layout: { item, price, label, stock, max_stock, out_of_stock_time }
+  active_deals = {},
   last_roll_time = 0
 }
 
--- Pick 5 unique fishes out of the pool and assign them a random stock cap (1-10)
-local function refresh_ghoti_deals()
+-- Safe pool picker routine matching your original code logic
+local function refresh_market_deals()
   local indices = {}
   while #indices < 5 do
     local rand_idx = math.random(1, #fish_pool)
@@ -70,13 +70,13 @@ local function refresh_ghoti_deals()
       label = base_fish.label,
       stock = random_stock,
       max_stock = random_stock,
-      out_of_stock_time = nil -- Tracks timestamp when this item drops to zero stock
+      out_of_stock_time = nil
     })
   end
   ghoti.market.last_roll_time = core.get_us_time()
 end
 
--- Checks if any depleted fish has been out of stock for 10 minutes (600 seconds)
+-- Checks background stock restock timers
 local function check_and_restock_items()
   local current_time = core.get_us_time()
   
@@ -84,120 +84,107 @@ local function check_and_restock_items()
     if deal.stock == 0 and deal.out_of_stock_time then
       local seconds_elapsed = (current_time - deal.out_of_stock_time) / 1000000
       
-      -- 10 minutes = 600 seconds
-      if seconds_elapsed >= 600 then
+      if seconds_elapsed >= 600 then -- 10 Minutes
         deal.stock = math.random(1, 10)
         deal.max_stock = deal.stock
-        deal.out_of_stock_time = nil -- Resets timer state cleanly
+        deal.out_of_stock_time = nil
       end
     end
   end
 end
 
--- Generate the graphical user interface layout
+-- Fixed layout using standard real_coordinates and labels (No custom title tags to break loading)
 function ghoti.show_formspec(player_name)
-  check_and_restock_items() -- Process sub-timers immediately before displaying the frame[cite: 6]
+  check_and_restock_items()
   
   local current_time = core.get_us_time()
-  local elapsed_seconds = (current_time - ghoti.market.last_roll_time) / 1000000[cite: 6]
-  local time_left_mins = math.max(0, math.floor(60 - (elapsed_seconds / 60)))[cite: 6]
+  local elapsed_seconds = (current_time - ghoti.market.last_roll_time) / 1000000
+  local time_left_mins = math.max(0, math.floor(60 - (elapsed_seconds / 60)))
 
-  -- Native clean layout using formspec_version 4+ specifications
   local formspec = 
-    "formspec_version[4]" ..
-    "size[11.5,9.0]" ..
-    "label[0.5,0.6;font_size=20;Ghoti's Fish Market]" ..
-    "label[0.5,1.2;Offers refresh in: " .. time_left_mins .. " minutes]" ..
-    "box[0.5,1.6;10.5,0.02;#ffffff]"
+    "size[11.5,8.5]" ..
+    "real_coordinates[true]" ..
+    "label[0.5,0.5;Ghoti's Fish Market]" ..
+    "label[0.5,0.9;Offers refresh in: " .. time_left_mins .. " minutes]" ..
+    "box[0.5,1.2;10.5,0.02;#ffffff]"
 
-  local row_y = 1.9
+  local row_y = 1.5
   for i, deal in ipairs(ghoti.market.active_deals) do
-    local stock_info = "Stock: " .. deal.stock .. "/" .. deal.max_stock[cite: 6]
-    local display_button = "button[9.0," .. row_y .. ";2.0,0.7;ghoti_sell_" .. i .. ";Sell 1x]"[cite: 6]
+    local stock_info = "Stock: " .. deal.stock .. "/" .. deal.max_stock
+    local display_button = "button[9.0," .. row_y .. ";2.0,0.7;ghoti_sell_" .. i .. ";Sell 1x]"
     
-    -- If out of stock, calculate remaining time on the cooldown[cite: 6]
     if deal.stock == 0 and deal.out_of_stock_time then
-      local elapsed = (current_time - deal.out_of_stock_time) / 1000000[cite: 6]
-      local remaining_cooldown = math.max(0, math.floor(10 - (elapsed / 60)))[cite: 6]
-      stock_info = "OUT OF STOCK (Restocking in " .. remaining_cooldown .. "m)"[cite: 6]
-      
-      -- Native unclickable close variant
+      local elapsed = (current_time - deal.out_of_stock_time) / 1000000
+      local remaining_cooldown = math.max(0, math.floor(10 - (elapsed / 60)))
+      stock_info = "OUT OF STOCK (Restocking in " .. remaining_cooldown .. "m)"
       display_button = "button[9.0," .. row_y .. ";2.0,0.7;disabled;Sold Out]"
     end
 
     formspec = formspec ..
-      "item_image[0.6," .. row_y .. ";0.8,0.8;" .. deal.item .. "]" ..[cite: 6]
+      "item_image[0.6," .. row_y .. ";0.8,0.8;" .. deal.item .. "]" ..
       "label[1.6," .. (row_y + 0.15) .. ";" .. deal.label .. "]" ..
       "label[1.6," .. (row_y + 0.5) .. ";" .. stock_info .. "]" ..
       "label[5.8," .. (row_y + 0.3) .. ";Value: " .. deal.price .. " Minegeld]" ..
-      display_button[cite: 6]
+      display_button
       
-    row_y = row_y + 0.95
+    row_y = row_y + 0.9
   end
 
-  formspec = formspec .. 
-    "box[0.5,6.7;10.5,0.02;#ffffff]" ..
-    "list[current_player;main;1.7,7.0;8,2;]" ..
-    "listring[current_player;main]"[cite: 6]
+  formspec = formspec ..
+    "box[0.5,6.0;10.5,0.02;#ffffff]" ..
+    "list[current_player;main;1.7,6.3;8,2;]" ..
+    "listring[current_player;main]"
 
   core.show_formspec(player_name, "folks:ghoti_market", formspec)
 end
 
--- This executes when Ghoti is right-clicked via the roles engine
+-- Modular execution hook run by roles.lua engine registry
 function ghoti.on_interact(player)
+  local player_name = player:get_player_name()
   local current_time = core.get_us_time()
-  local elapsed = (current_time - ghoti.market.last_roll_time) / 1000000[cite: 6]
-  
-  -- Total pool rotation trigger (1 hour)[cite: 6]
-  if #ghoti.market.active_deals == 0 or elapsed >= 3600 then[cite: 6]
-    refresh_ghoti_deals()
-  else
-    check_and_restock_items()[cite: 6]
+
+  if #ghoti.market.active_deals == 0 or ((current_time - ghoti.market.last_roll_time) / 1000000 >= 3600) then
+    refresh_market_deals()
   end
 
-  ghoti.show_formspec(player:get_player_name())[cite: 6]
+  ghoti.show_formspec(player_name)
 end
 
--- Formspec UI Intercept Event Handler
+-- Primary Formspec Field Interceptor
 core.register_on_player_receive_fields(function(player, formname, fields)
-  if formname ~= "folks:ghoti_market" then return false end[cite: 6]
-  local player_name = player:get_player_name()[cite: 6]
+  if formname ~= "folks:ghoti_market" then return false end
+  local player_name = player:get_player_name()
 
   for i = 1, 5 do
-    if fields["ghoti_sell_" .. i] then[cite: 6]
-      check_and_restock_items() -- Process background timers inside response loop[cite: 6]
+    if fields["ghoti_sell_" .. i] then
+      check_and_restock_items()
       
-      local deal = ghoti.market.active_deals[i][cite: 6]
+      local deal = ghoti.market.active_deals[i]
       
-      -- Guard condition preventing nil index crashes or cheating empty stocks[cite: 6]
-      if deal and deal.stock > 0 then[cite: 6]
-        local inv = player:get_inventory()[cite: 6]
+      if deal and deal.stock > 0 then
+        local inv = player:get_inventory()
         
-        if inv:contains_item("main", ItemStack(deal.item)) then[cite: 6]
-          inv:remove_item("main", ItemStack(deal.item .. " 1"))[cite: 6]
+        if inv:contains_item("main", ItemStack(deal.item)) then
+          inv:remove_item("main", ItemStack(deal.item .. " 1"))
           
-          -- Deduct item stock pool[cite: 6]
-          deal.stock = deal.stock - 1[cite: 6]
-          
-          -- Initialize the unique 10-minute cooldown if item hits zero stock[cite: 6]
-          if deal.stock == 0 then[cite: 6]
-            deal.out_of_stock_time = core.get_us_time()[cite: 6]
+          deal.stock = deal.stock - 1
+          if deal.stock == 0 then
+            deal.out_of_stock_time = core.get_us_time()
           end
           
-          -- Economy rewards messaging hook (Targeting Minegeld economy items)
           inv:add_item("main", ItemStack("currency:minegeld " .. deal.price))
           core.chat_send_player(player_name, core.colorize("#00ff00", "Ghoti: Thanks! Here is your " .. deal.price .. " Minegeld for the " .. deal.label .. "."))
           
-          ghoti.show_formspec(player_name)[cite: 6]
+          ghoti.show_formspec(player_name)
         else
-          core.chat_send_player(player_name, core.colorize("#ff3333", "Ghoti: You don't have any " .. deal.label .. " in your bag!"))[cite: 6]
+          core.chat_send_player(player_name, core.colorize("#ff3333", "Ghoti: You don't have any " .. deal.label .. " in your bag!"))
         end
-      elseif deal and deal.stock == 0 then[cite: 6]
-        core.chat_send_player(player_name, core.colorize("#ff3333", "Ghoti: I cannot buy more of that right now. I am completely full!"))[cite: 6]
+      elseif deal and deal.stock == 0 then
+        core.chat_send_player(player_name, core.colorize("#ff3333", "Ghoti: I cannot buy more of that right now. I am completely full!"))
       end
-      return true[cite: 6]
+      return true
     end
   end
 end)
 
-return ghoti[cite: 6]
+return ghoti
