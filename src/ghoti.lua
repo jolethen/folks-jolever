@@ -39,7 +39,7 @@ local fish_pool = {
   {item = "fishing:fish_mackerel",       price = 5,  label = "Mackerel"}
 }
 
--- Multi-NPC market directory tracking individual stock per unique entity pointer hash
+-- Multi-NPC market directory tracking individual stock and display names per unique key
 ghoti.markets = {}
 
 -- Tracks which active player session is talking to which specific NPC instance
@@ -48,7 +48,6 @@ local player_current_npc = {}
 -- Helper function to generate a reliable unique string key from the npc_self object
 local function get_npc_key(npc_self)
   if not npc_self then return "default" end
-  -- Fallback sequence checking for custom IDs, unique positions, or memory addresses
   if npc_self._npc_id then return tostring(npc_self._npc_id) end
   if npc_self.object then 
     local pos = npc_self.object:get_pos()
@@ -57,8 +56,24 @@ local function get_npc_key(npc_self)
   return tostring(npc_self)
 end
 
+-- Helper function to resolve the active name string directly from the NPC object
+local function get_npc_display_name(npc_self)
+  if not npc_self then return "Fisherman" end
+  -- Checks fallback path sequence for standard folks structure
+  if npc_self._npc_id and folks and folks.get_npc then
+    local npc_data = folks.get_npc(npc_self._npc_id)
+    if npc_data and npc_data._npc_name then
+      return npc_data._npc_name
+    end
+  end
+  if npc_self.initial_properties and npc_self.initial_properties.nametag then
+    return npc_self.initial_properties.nametag
+  end
+  return "Fisherman"
+end
+
 -- Pick 5 unique fishes out of the pool for a SPECIFIC NPC
-local function refresh_npc_deals(npc_key)
+local function refresh_npc_deals(npc_key, display_name)
   local indices = {}
   while #indices < 5 do
     local rand_idx = math.random(1, #fish_pool)
@@ -72,6 +87,7 @@ local function refresh_npc_deals(npc_key)
   end
 
   ghoti.markets[npc_key] = {
+    title_name = display_name,
     active_deals = {},
     last_roll_time = core.get_us_time()
   }
@@ -119,11 +135,14 @@ function ghoti.show_formspec(player_name, npc_key)
   local current_time = core.get_us_time()
   local elapsed_seconds = (current_time - market.last_roll_time) / 1000000
   local time_left_mins = math.max(0, math.floor(60 - (elapsed_seconds / 60)))
+  
+  -- Generates personalized name dynamically e.g. "Allison's Fish Market"
+  local shop_title = market.title_name .. "'s Fish Market"
 
   local formspec = 
     "size[11.5,8.5]" ..
     "real_coordinates[true]" ..
-    "label[0.5,0.5;Fisherman's Market]" ..
+    "label[0.5,0.5;" .. shop_title .. "]" ..
     "label[0.5,0.9;Offers refresh in: " .. time_left_mins .. " minutes]" ..
     "box[0.5,1.2;10.5,0.02;#ffffff]"
 
@@ -161,13 +180,15 @@ end
 function ghoti.on_interact(player, npc_self)
   local player_name = player:get_player_name()
   local npc_key = get_npc_key(npc_self)
+  local display_name = get_npc_display_name(npc_self)
+  
   player_current_npc[player_name] = npc_key
 
   local current_time = core.get_us_time()
   
   -- If this specific NPC has no market registered yet, or an hour has passed, spin up fresh unique deals
   if not ghoti.markets[npc_key] or ((current_time - ghoti.markets[npc_key].last_roll_time) / 1000000 >= 3600) then
-    refresh_npc_deals(npc_key)
+    refresh_npc_deals(npc_key, display_name)
   else
     check_and_restock_items(npc_key)
   end
@@ -209,14 +230,14 @@ core.register_on_player_receive_fields(function(player, formname, fields)
           
           -- Pay out exactly 5 Minegeld notes
           inv:add_item("main", ItemStack("currency:minegeld " .. deal.price))
-          core.chat_send_player(player_name, core.colorize("#00ff00", "Fisherman: Thanks! Here is your " .. deal.price .. " Minegeld for the " .. deal.label .. "."))
+          core.chat_send_player(player_name, core.colorize("#00ff00", market.title_name .. ": Thanks! Here is your " .. deal.price .. " Minegeld for the " .. deal.label .. "."))
           
           ghoti.show_formspec(player_name, npc_key)
         else
-          core.chat_send_player(player_name, core.colorize("#ff3333", "Fisherman: You don't have any " .. deal.label .. " in your bag!"))
+          core.chat_send_player(player_name, core.colorize("#ff3333", market.title_name .. ": You don't have any " .. deal.label .. " in your bag!"))
         end
       elseif deal and deal.stock == 0 then
-        core.chat_send_player(player_name, core.colorize("#ff3333", "Fisherman: I cannot buy more of that right now. I am completely full!"))
+        core.chat_send_player(player_name, core.colorize("#ff3333", market.title_name .. ": I cannot buy more of that right now!"))
       end
       return true
     end
