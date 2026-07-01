@@ -18,6 +18,10 @@ end
 local weekly_file = loadfile(modpath .. "/src/weekly_quests.lua")
 local weekly_sys = weekly_file and weekly_file()
 
+-- FIX: Load the Witch module cleanly right here
+local witch_file = loadfile(modpath .. "/src/witch.lua")
+local witch_sys = witch_file and witch_file()
+
 roles.registry = {
   ["ghoti"] = {
     action = function(player, npc_self)
@@ -108,6 +112,17 @@ roles.registry = {
         weekly_sys.show_interface(player:get_player_name())
       else
         core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
+      end
+    end
+  },
+
+  -- FIX: New Witch NPC Entry
+  ["witch"] = {
+    action = function(player, npc_self)
+      if witch_sys and witch_sys.show_interface then
+        witch_sys.show_interface(player:get_player_name())
+      else
+        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Witch transmuting altar offline."))
       end
     end
   },
