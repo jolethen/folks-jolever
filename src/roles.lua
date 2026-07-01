@@ -116,16 +116,15 @@ roles.registry = {
     end
   },
 
-  -- FIX: New Witch NPC Entry
+  --- FIX: New Witch NPC Entry
   ["witch"] = {
     action = function(player, npc_self)
-      if witch_sys and witch_sys.show_interface then
-        witch_sys.show_interface(player:get_player_name())
+      if witch_sys and witch_sys.on_interact then
+        witch_sys.on_interact(player, npc_self)
       else
         core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Witch transmuting altar offline."))
       end
     end
   },
-}
 
 return roles
