@@ -14,6 +14,10 @@ if quest_gui_file then
   quest_gui_file()
 end
 
+-- Load the new Weekly quest script cleanly
+local weekly_file = loadfile(modpath .. "/src/weekly_quests.lua")
+local weekly_sys = weekly_file and weekly_file()
+
 roles.registry = {
   ["ghoti"] = {
     action = function(player, npc_self)
@@ -94,6 +98,17 @@ roles.registry = {
     action = function(player, npc_self)
       player:set_hp(player:get_properties().hp_max)
       core.chat_send_player(player:get_player_name(), "The Doctor has healed you!")
+    end
+  },
+
+  -- New Weekly Quests Entry
+  ["weeklyquests"] = {
+    action = function(player, npc_self)
+      if weekly_sys then
+        weekly_sys.show_interface(player:get_player_name())
+      else
+        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
+      end
     end
   },
 }
