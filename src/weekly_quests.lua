@@ -5,7 +5,8 @@ local S = core.get_translator("folks")
 local storage = core.get_mod_storage()
 
 if not folks then folks = {} end
-folks.weekly = {}
+-- FIX: Prevent overwriting the namespace if another file initialized it first
+if not folks.weekly then folks.weekly = {} end
 
 -- Master Definition of the 4 Weekly Chain Quests
 folks.weekly.chain = {
@@ -14,12 +15,9 @@ folks.weekly.chain = {
     title = "Weekly Operation: Agricultural Reclaiming",
     description = "Harvest and clear out standard agricultural fields to secure basic supplies.",
     target_count = 1500,
-    -- Accepting both node names and potential inventory item names for Barley
     target_items = { 
       ["techblox_ores:mmo_barley_8"] = true, 
-      ["x_farming:barley_8"] = true,
-      ["techblox_ores:barley"] = true,
-      ["x_farming:barley"] = true
+      ["x_farming:barley_8"] = true
     },
     progress_label = "Barley harvested: ",
     short_name = "1. Barley"
@@ -76,7 +74,9 @@ end
 function folks.weekly.show_interface(player_name)
   local data = load_weekly_data(player_name)
   local current_step = data.current_step
-  local cfg = folks.weekly.chain[current_step]
+  
+  -- FIX: Safe fallback lookup to prevent formspec nil crashes on completion screen
+  local cfg = folks.weekly.chain[current_step] or folks.weekly.chain[4]
 
   local formspec = 
     "size[9.5,8.5]" ..
@@ -132,12 +132,14 @@ function folks.weekly.show_interface(player_name)
 end
 
 -- Progress Processor Function
-local function add_weekly_progress(player, item_name, count)
+function folks.weekly.add_progress(player, item_name, count)
+  if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
   local data = load_weekly_data(player_name)
   if data.completed_all or data.current_step > 4 then return end
 
   local cfg = folks.weekly.chain[data.current_step]
+  if not cfg then return end
   
   if cfg.target_items[item_name] then
     data.progress = data.progress + (count or 1)
@@ -148,6 +150,7 @@ local function add_weekly_progress(player, item_name, count)
         local reward_gold = ItemStack("default:gold 50")
         local reward_minegeld = ItemStack("currency:minegeld 1")
         
+        -- FIX: Safe item addition that drops items at feet if inventory is physically tight
         if inv:room_for_item("main", reward_gold) then inv:add_item("main", reward_gold)
         else core.add_item(player:get_pos(), reward_gold) end
         
@@ -156,6 +159,7 @@ local function add_weekly_progress(player, item_name, count)
       end
 
       core.chat_send_player(player_name, core.colorize("#00ff00", "[Weekly Terminal]: Step objective complete! " .. cfg.title))
+      
       data.current_step = data.current_step + 1
       data.progress = 0
       
@@ -163,31 +167,21 @@ local function add_weekly_progress(player, item_name, count)
         data.completed_all = true
         core.chat_send_player(player_name, core.colorize("#00f0ff", "[Weekly Terminal]: Outstanding execution! All 4 weekly directives are secure."))
       else
+        -- FIX: Bounds checking to completely prevent indexing nil values on final quest exit
         local next_cfg = folks.weekly.chain[data.current_step]
-        core.chat_send_player(player_name, core.colorize("#00aaff", "[Weekly Terminal]: Next sequential protocol online: " .. next_cfg.title))
+        if next_cfg then
+          core.chat_send_player(player_name, core.colorize("#00aaff", "[Weekly Terminal]: Next sequential protocol online: " .. next_cfg.title))
+        end
       end
     end
     save_weekly_data(player_name, data)
   end
 end
 
--- 3. INTERCEPTION METHOD A: Mining traditional blocks
+-- 3. Mining Traditional Blocks (Stone, Gemstones)
 core.register_on_dignode(function(pos, oldnode, oldmetadata, digger)
   if not digger or not digger:is_player() then return end
-  add_weekly_progress(digger, oldnode.name, 1)
+  folks.weekly.add_progress(digger, oldnode.name, 1)
 end)
-
--- 4. INTERCEPTION METHOD B: Picking up items from the ground (Fixes custom farming harvests!)
-if core.register_on_item_pickup then
-  core.register_on_item_pickup(function(itemstack, picker, pointed_thing)
-    if picker and picker:is_player() then
-      -- Prints name to chat if it's barley so you can identify item strings
-      if itemstack:get_name():find("barley") then
-        core.chat_send_player(picker:get_player_name(), "[Debug Pickup]: Caught item name: " .. itemstack:get_name())
-      end
-      add_weekly_progress(picker, itemstack:get_name(), itemstack:get_count())
-    end
-  end)
-end
 
 return folks.weekly
