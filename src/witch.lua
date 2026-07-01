@@ -22,7 +22,7 @@ local trades = {
   }
 }
 
--- 2. FORMSPEC GUI LOBBY (Retaining the custom stylized layout)
+-- 2. FORMSPEC GUI LOBBY (Using the custom purple layout)
 function witch.show_interface(player_name)
   local formspec = 
     "size[9.5,7.0]" ..
@@ -51,7 +51,13 @@ function witch.show_interface(player_name)
   core.show_formspec(player_name, "folks:witch_altar", formspec)
 end
 
--- 3. INTERACTIVE TRANSACTION PROCESSOR
+-- 3. HOOK ENTRY (Matching ghoti.lua pattern perfectly)
+function witch.on_interact(player, npc_self)
+  local player_name = player:get_player_name()
+  witch.show_interface(player_name)
+end
+
+-- 4. INTERACTIVE TRANSACTION PROCESSOR
 local function process_trade(player, trade_cfg)
   local player_name = player:get_player_name()
   local inv = player:get_inventory()
@@ -84,7 +90,7 @@ local function process_trade(player, trade_cfg)
   core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Transmutation successful! " .. trade_cfg.title .. " finalized."))
 end
 
--- 4. GUI SELECTION PROCESSOR
+-- 5. GUI SELECTION PROCESSOR
 core.register_on_player_receive_fields(function(player, formname, fields)
   if formname ~= "folks:witch_altar" then return false end
   if not player or not player:is_player() then return true end
