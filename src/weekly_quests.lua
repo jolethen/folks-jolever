@@ -15,7 +15,8 @@ folks.weekly.chain = {
     description = "Harvest and clear out standard agricultural fields to secure basic supplies.",
     target_count = 1500,
     target_items = { ["techblox_ores:mmo_barley_8"] = true, ["x_farming:barley_8"] = true },
-    progress_label = "Barley harvested: "
+    progress_label = "Barley harvested: ",
+    short_name = "1. Barley Harvest"
   },
   [2] = {
     id = "weekly_stone",
@@ -23,7 +24,8 @@ folks.weekly.chain = {
     description = "Examine and break down structural stones to secure core infrastructure lines.",
     target_count = 1500,
     target_items = { ["default:stone"] = true },
-    progress_label = "Stone mined: "
+    progress_label = "Stone mined: ",
+    short_name = "2. Stone Mining"
   },
   [3] = {
     id = "weekly_earth",
@@ -31,7 +33,8 @@ folks.weekly.chain = {
     description = "Mine down deep into core matrix lines to secure Earth Gemstone Ores.",
     target_count = 25,
     target_items = { ["magic_materials:earth_gemstone"] = true },
-    progress_label = "Earth Gemstones mined: "
+    progress_label = "Earth Gemstones mined: ",
+    short_name = "3. Earth Ores"
   },
   [4] = {
     id = "weekly_lightning",
@@ -39,7 +42,8 @@ folks.weekly.chain = {
     description = "Recover rare Lightning Gemstone Ores to supercharge the main sector grids.",
     target_count = 25,
     target_items = { ["magic_materials:light_gemstone"] = true },
-    progress_label = "Lightning Gemstones mined: "
+    progress_label = "Lightning Gemstones mined: ",
+    short_name = "4. Lightning Ores"
   }
 }
 
@@ -68,30 +72,57 @@ function folks.weekly.show_interface(player_name)
   local current_step = data.current_step
   local cfg = folks.weekly.chain[current_step]
 
+  -- Expanded size to comfortably contain the visual progression summary tracker block
   local formspec = 
-    "size[9.0,6.5]" ..
+    "size[9.0,8.2]" ..
     "real_coordinates[true]" ..
-    "background[0,0;9.0,6.5;#11161b;true]" ..
+    "background[0,0;9.0,8.2;#11161b;true]" ..
     "box[0,0;9.0,0.1;#00f0ff]" ..
     "label[0.6,0.6;" .. core.colorize("#00f0ff", "WEEKLY TERMINAL INTERFACE") .. "]" ..
     "box[0.6,1.0;7.8,0.02;#ffffff15]"
 
   if data.completed_all or current_step > 4 then
     formspec = formspec .. 
-      "label[2.0,3.0;" .. core.colorize("#00ff00", "All operations completed for this weekly sequence!") .. "]" ..
-      "label[2.8,3.5;" .. core.colorize("#8899a6", "Check back next week for fresh terminal links.") .. "]"
+      "label[2.0,2.5;" .. core.colorize("#00ff00", "All operations completed for this weekly sequence!") .. "]" ..
+      "label[2.8,3.0;" .. core.colorize("#8899a6", "Check back next week for fresh terminal links.") .. "]"
   else
     formspec = formspec ..
-      "label[0.6,1.5;" .. core.colorize("#ffffff", cfg.title) .. "]" ..
-      "textarea[0.6,2.0;7.8,1.2;weekly_desc;;" .. cfg.description .. "]" ..
-      "box[0.6,3.4;7.8,1.4;#ffffff03]" ..
-      "label[0.9,3.8;" .. core.colorize("#ffffff", "PROGRESSION STATUS:") .. "]" ..
-      "label[0.9,4.3;" .. core.colorize("#ffaa00", cfg.progress_label .. data.progress .. " / " .. cfg.target_count) .. "]" ..
-      "label[5.3,3.8;" .. core.colorize("#a6b2c0", "ASSIGNMENT PAYLOAD:") .. "]" ..
-      "label[5.3,4.3;" .. core.colorize("#00ff00", "50 Gold & 1 Minegeld") .. "]"
+      "label[0.6,1.4;" .. core.colorize("#ffffff", cfg.title) .. "]" ..
+      "textarea[0.6,1.8;7.8,1.2;weekly_desc;;" .. cfg.description .. "]" ..
+      "box[0.6,3.1;7.8,1.3;#ffffff03]" ..
+      "label[0.9,3.4;" .. core.colorize("#ffffff", "CURRENT OBJECTIVE PROGRESS:") .. "]" ..
+      "label[0.9,3.9;" .. core.colorize("#ffaa00", cfg.progress_label .. data.progress .. " / " .. cfg.target_count) .. "]" ..
+      "label[5.3,3.4;" .. core.colorize("#a6b2c0", "ASSIGNMENT PAYLOAD:") .. "]" ..
+      "label[5.3,3.9;" .. core.colorize("#00ff00", "50 Gold & 1 Minegeld") .. "]"
   end
 
-  formspec = formspec .. "button_exit[3.5,5.4;2.0,0.6;quit;Disconnect]"
+  -- Horizontal rule splitting details from master chain tracking panel
+  formspec = formspec .. "box[0.6,4.7;7.8,0.02;#ffffff15]" ..
+                         "label[0.6,5.0;" .. core.colorize("#a6b2c0", "CHAIN TIMELINE INDEX:") .. "]"
+  
+  -- Generate visual status links for all 4 steps at the footer area
+  local slot_x = 0.6
+  for idx = 1, 4 do
+    local chain_cfg = folks.weekly.chain[idx]
+    local status_str = ""
+    
+    if data.completed_all or idx < current_step then
+      status_str = core.colorize("#00ff00", "[DONE]")
+    elseif idx == current_step and not data.completed_all then
+      status_str = core.colorize("#ffaa00", "[" .. data.progress .. "/" .. chain_cfg.target_count .. "]")
+    else
+      status_str = core.colorize("#556677", "[LOCKED]")
+    end
+    
+    formspec = formspec .. 
+      "box[" .. slot_x .. ",5.4;1.8,1.0;#ffffff02]" ..
+      "label[" .. (slot_x + 0.15) .. ",5.6;" .. core.colorize("#ffffff", chain_cfg.short_name) .. "]" ..
+      "label[" .. (slot_x + 0.15) .. ",6.0;" .. status_str .. "]"
+      
+    slot_x = slot_x + 2.0
+  end
+
+  formspec = formspec .. "button_exit[3.5,7.1;2.0,0.6;quit;Disconnect]"
   core.show_formspec(player_name, "folks:weekly_log", formspec)
 end
 
