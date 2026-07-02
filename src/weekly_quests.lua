@@ -30,24 +30,35 @@ local QUESTS = {
   }
 }
 
--- 2. PERSISTENCE LAYER LOGIC (Using memory-efficient lookup tables)
+-- 2. PERSISTENCE LAYER LOGIC (Using memory-efficient lookup tables with nil safe fallbacks)
 local function get_player_progress(player_name)
+  if not player_name then return { barley = 0, stone = 0, earth = 0, lightning = 0 } end
+  
   local raw = storage:get_string("sellable_prog:" .. player_name)
   if raw and raw ~= "" then
     local success, data = pcall(core.deserialize, raw)
     if success and type(data) == "table" then
-      return data
+      return {
+        barley = tonumber(data.barley) or 0,
+        stone = tonumber(data.stone) or 0,
+        earth = tonumber(data.earth) or 0,
+        lightning = tonumber(data.lightning) or 0
+      }
     end
   end
   return { barley = 0, stone = 0, earth = 0, lightning = 0 }
 end
 
 local function save_player_progress(player_name, data)
-  storage:set_string("sellable_prog:" .. player_name, core.serialize(data))
+  if player_name and type(data) == "table" then
+    storage:set_string("sellable_prog:" .. player_name, core.serialize(data))
+  end
 end
 
--- 3. FORMSPEC GUI LOBBY (Sleek and Modern Redesign Layout)
+-- 3. FORMSPEC GUI LOBBY (Sleek, Modern, and Nil Safe Layout)
 function weekly_sys.show_interface(player_name)
+  if not player_name then return end
+  
   local progress_data = get_player_progress(player_name)
   
   local formspec = 
@@ -64,23 +75,25 @@ function weekly_sys.show_interface(player_name)
 
   for _, key in ipairs(order) do
     local cfg = QUESTS[key]
-    local current = progress_data[key] or 0
-    
-    local status_text
-    if current >= cfg.goal then
-      status_text = core.colorize("#00ff00", "COMPLETED (50$ Milestone Secured)")
-    else
-      status_text = core.colorize("#a6b2c0", "Progress: " .. current .. " / " .. cfg.goal)
-    end
-
-    formspec = formspec .. 
-      "box[0.6," .. start_y .. ";8.3,1.3;#ffffff03]" ..
-      "item_image[0.9," .. (start_y + 0.15) .. ";1.0,1.0;" .. cfg.item .. "]" ..
-      "label[2.1," .. (start_y + 0.4) .. ";" .. core.colorize("#ffffff", cfg.title) .. "]" ..
-      "label[2.1," .. (start_y + 0.85) .. ";" .. status_text .. "]" ..
-      "button[6.5," .. (start_y + 0.3) .. ";2.1,0.7;deposit_" .. key .. ";Deposit]"
+    if cfg then
+      local current = progress_data[key] or 0
       
-    start_y = start_y + 1.5
+      local status_text
+      if current >= cfg.goal then
+        status_text = core.colorize("#00ff00", "COMPLETED (50$ Milestone Secured)")
+      else
+        status_text = core.colorize("#a6b2c0", "Progress: " .. current .. " / " .. cfg.goal)
+      end
+
+      formspec = formspec .. 
+        "box[0.6," .. start_y .. ";8.3,1.3;#ffffff03]" ..
+        "item_image[0.9," .. (start_y + 0.15) .. ";1.0,1.0;" .. (cfg.item or "") .. "]" ..
+        "label[2.1," .. (start_y + 0.4) .. ";" .. core.colorize("#ffffff", cfg.title or "") .. "]" ..
+        "label[2.1," .. (start_y + 0.85) .. ";" .. status_text .. "]" ..
+        "button[6.5," .. (start_y + 0.3) .. ";2.1,0.7;deposit_" .. key .. ";Deposit]"
+        
+      start_y = start_y + 1.5
+    end
   end
 
   formspec = formspec .. "button_exit[3.7,7.7;2.1,0.6;quit;Leave Terminal]"
@@ -88,19 +101,26 @@ function weekly_sys.show_interface(player_name)
   core.show_formspec(player_name, "folks:weeklyquests", formspec)
 end
 
--- 4. HOOK ENTRY (Matching roles.lua standard configuration execution)
+-- 4. HOOK ENTRY (Matching roles.lua standard configuration execution with safe object assertion)
 function weekly_sys.on_interact(player, npc_self)
+  if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
-  weekly_sys.show_interface(player_name)
+  if player_name then
+    weekly_sys.show_interface(player_name)
+  end
 end
 
 -- 5. INTERACTIVE TRANSACTION PROCESSOR
 local function handle_bulk_deposit(player, key)
+  if not player or not player:is_player() then return end
+  
   local player_name = player:get_player_name()
+  if not player_name then return end
+  
   local inv = player:get_inventory()
-  if not inv then return end
-
   local cfg = QUESTS[key]
+  if not inv or not cfg then return end
+
   local progress_data = get_player_progress(player_name)
   local current_amount = progress_data[key] or 0
 
@@ -153,7 +173,10 @@ local function handle_bulk_deposit(player, key)
     if inv:room_for_item("main", pay_stack) then
       inv:add_item("main", pay_stack)
     else
-      core.add_item(player:get_pos(), pay_stack)
+      local pos = player:get_pos()
+      if pos then
+        core.add_item(pos, pay_stack)
+      end
     end
 
     core.chat_send_player(player_name, core.colorize("#00ff00", "[Witch]: Directive complete! Milestone secured. +50 Minegeld notes dispatched!"))
