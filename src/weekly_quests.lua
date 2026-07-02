@@ -4,7 +4,7 @@
 local S = core.get_translator("folks")
 local storage = core.get_mod_storage()
 
--- FULFILL FLAW 1: Expose weekly_sys globally so roles.lua can safely index it
+-- Expose weekly_sys globally so roles.lua can safely index it
 weekly_sys = {} 
 
 -- 1. CONFIGURATION: Define tracking structures and targets cleanly
@@ -32,7 +32,7 @@ local QUESTS = {
   }
 }
 
--- 2. PERSISTENCE LAYER LOGIC (Fulfill Flaw 2: Rigid Type Casting & Deserialization Fragility)
+-- 2. PERSISTENCE LAYER LOGIC
 local function get_player_progress(player_name)
   if not player_name then return { barley = 0, stone = 0, earth = 0, lightning = 0 } end
   
@@ -57,7 +57,7 @@ local function save_player_progress(player_name, data)
   end
 end
 
--- 3. FORMSPEC GUI LOBBY (Sleek, Modern, and Coordinate Safe Layout)
+-- 3. FORMSPEC GUI LOBBY
 function weekly_sys.show_interface(player_name)
   if not player_name then return end
   
@@ -101,7 +101,7 @@ function weekly_sys.show_interface(player_name)
   core.show_formspec(player_name, "folks:weeklyquests", formspec)
 end
 
--- 4. HOOK ENTRY (Fulfill Flaw 3: Added Missing nil Object Validation on core interact hooks)
+-- 4. HOOK ENTRY
 function weekly_sys.on_interact(player, npc_self)
   if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
@@ -110,7 +110,7 @@ function weekly_sys.on_interact(player, npc_self)
   end
 end
 
--- 5. INTERACTIVE TRANSACTION PROCESSOR (Fulfill Flaw 4 & 3: Aggregate Item Scanning & Vector Fallbacks)
+-- 5. INTERACTIVE TRANSACTION PROCESSOR (Using native contains_item / remove_item API styles)
 local function handle_bulk_deposit(player, key)
   if not player or not player:is_player() then return end
   
@@ -130,55 +130,58 @@ local function handle_bulk_deposit(player, key)
     return
   end
 
-  -- Assemble candidate pool including both primary items and all possible alternatives
-  local candidates = { cfg.item }
-  if cfg.alt_items then
-    for _, alt in ipairs(cfg.alt_items) do
-      table.insert(candidates, alt)
+  -- Determine which item pool candidate to test first based on priority stack
+  local item_to_remove = nil
+  local amount_to_remove = 0
+
+  -- Check primary item registry entry first
+  for amt = math.min(99, amount_needed), 1, -1 do
+    local check_stack = ItemStack(cfg.item .. " " .. amt)
+    if inv:contains_item("main", check_stack) then[cite: 5]
+      item_to_remove = cfg.item
+      amount_to_remove = amt
+      break
     end
   end
 
-  -- Gather inventory quantities across all eligible item pools
-  local deposit_plan = {}
-  local total_available = 0
-
-  for _, item_name in ipairs(candidates) do
-    local count = inv:get_stack_count(item_name)
-    if count > 0 then
-      local take = math.min(count, amount_needed - total_available)
-      if take > 0 then
-        table.insert(deposit_plan, { name = item_name, count = take })
-        total_available = total_available + take
+  -- Check alternative lists sequentially if the primary item wasn't found in bags
+  if not item_to_remove and cfg.alt_items then
+    for _, alt_item in ipairs(cfg.alt_items) do
+      for amt = math.min(99, amount_needed), 1, -1 do
+        local check_stack = ItemStack(alt_item .. " " .. amt)
+        if inv:contains_item("main", check_stack) then[cite: 5]
+          item_to_remove = alt_item
+          amount_to_remove = amt
+          break
+        end
       end
+      if item_to_remove then break end
     end
-    if total_available >= amount_needed then break end
   end
 
-  if total_available <= 0 then
+  if not item_to_remove or amount_to_remove <= 0 then
     core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: Verification failed. You have no valid supplies for this drop."))
     return
   end
 
-  -- Deduct calculated sets across player bags cleanly
-  for _, action in ipairs(deposit_plan) do
-    inv:remove_item("main", ItemStack(action.name .. " " .. action.count))
-  end
+  -- Safe execution via native InvRef method pools
+  local remove_stack = ItemStack(item_to_remove .. " " .. amount_to_remove)
+  inv:remove_item("main", remove_stack)[cite: 5]
 
   -- Save step-math values safely
-  local new_amount = current_amount + total_available
+  local new_amount = current_amount + amount_to_remove
   progress_data[key] = new_amount
   save_player_progress(player_name, progress_data)
 
-  core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Deposited " .. total_available .. "x items into the terminal cluster."))
+  core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Deposited " .. amount_to_remove .. "x items into the terminal cluster."))
 
   -- Milestone Trigger Check
   if new_amount >= cfg.goal then
     local pay_stack = ItemStack("currency:minegeld 50")
     
-    if inv:room_for_item("main", pay_stack) then
-      inv:add_item("main", pay_stack)
+    if inv:room_for_item("main", pay_stack) then[cite: 5]
+      inv:add_item("main", pay_stack)[cite: 5]
     else
-      -- Spatial Fallback Verification: Ensure vector exists before popping items into world space
       local pos = player:get_pos()
       if pos then
         core.add_item(pos, pay_stack)
@@ -195,8 +198,8 @@ end
 
 -- 6. GUI SELECTION PROCESSOR
 core.register_on_player_receive_fields(function(player, formname, fields)
-  if formname ~= "folks:weeklyquests" then return false end
-  if not player or not player:is_player() then return true end
+  if formname ~= "folks:weeklyquests" then return false end[cite: 5]
+  if not player or not player:is_player() then return true end[cite: 5]
 
   if fields.deposit_barley then
     handle_bulk_deposit(player, "barley")
