@@ -4,8 +4,8 @@
 local S = core.get_translator("folks")
 local storage = core.get_mod_storage()
 
--- Fixed to a local instantiation so loadfile captures the return payload
-local weekly_quests_system = {} 
+-- Renamed to weekly_sys to cleanly map with your roles.lua file configuration!
+local weekly_sys = {} 
 
 -- 1. CONFIGURATION: Define tracking structures and targets cleanly
 local QUESTS = {
@@ -34,7 +34,7 @@ local QUESTS = {
 
 -- 2. PERSISTENCE LAYER LOGIC
 local function get_player_progress(player_name)
-  if not player_name then return { barley = 0, stone = 0, earth = 0, lightning = 0 } end
+  if not player_name or player_name == "" then return { barley = 0, stone = 0, earth = 0, lightning = 0 } end
   
   local raw = storage:get_string("sellable_prog:" .. player_name)
   if raw and raw ~= "" then
@@ -52,14 +52,14 @@ local function get_player_progress(player_name)
 end
 
 local function save_player_progress(player_name, data)
-  if player_name and type(data) == "table" then
+  if player_name and player_name ~= "" and type(data) == "table" then
     storage:set_string("sellable_prog:" .. player_name, core.serialize(data))
   end
 end
 
 -- 3. FORMSPEC GUI LOBBY
-function weekly_quests_system.show_interface(player_name)
-  if not player_name then return end
+function weekly_sys.show_interface(player_name)
+  if not player_name or player_name == "" then return end
   
   local progress_data = get_player_progress(player_name)
   
@@ -102,11 +102,20 @@ function weekly_quests_system.show_interface(player_name)
 end
 
 -- 4. HOOK ENTRY
-function weekly_quests_system.on_interact(player, npc_self)
-  if not player or not player:is_player() then return end
-  local player_name = player:get_player_name()
-  if player_name then
-    weekly_quests_system.show_interface(player_name)
+function weekly_sys.on_interact(player, npc_self)
+  if not player then return end
+  
+  -- Flexible extraction ensures it works if a player entity object or raw name string is passed
+  local player_name = ""
+  if type(player) == "string" then
+    player_name = player
+  elseif player.get_player_name then
+    if not player:is_player() then return end
+    player_name = player:get_player_name()
+  end
+
+  if player_name and player_name ~= "" then
+    weekly_sys.show_interface(player_name)
   end
 end
 
@@ -115,7 +124,7 @@ local function handle_bulk_deposit(player, key)
   if not player or not player:is_player() then return end
   
   local player_name = player:get_player_name()
-  if not player_name then return end
+  if not player_name or player_name == "" then return end
   
   local inv = player:get_inventory()
   local cfg = QUESTS[key]
@@ -186,7 +195,7 @@ local function handle_bulk_deposit(player, key)
     core.sound_play("default_cool_lava", {to_player = player_name, gain = 1.0}, true)
   end
 
-  weekly_quests_system.show_interface(player_name)
+  weekly_sys.show_interface(player_name)
 end
 
 -- 6. GUI SELECTION PROCESSOR
@@ -209,4 +218,4 @@ core.register_on_player_receive_fields(function(player, formname, fields)
   end
 end)
 
-return weekly_quests_system
+return weekly_sys
