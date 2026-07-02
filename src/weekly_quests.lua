@@ -1,5 +1,5 @@
 -- src/weekly_quests.lua
--- High-Performance Sandbox-Safe Weekly Quest Engine with RAM Caching
+-- High-Performance Sandbox-Safe Weekly Quest Engine with RAM Caching & Live UI Updates
 
 local S = core.get_translator("folks")
 local storage = core.get_mod_storage() -- Native storage API: Sandbox-safe out of the box
@@ -56,6 +56,7 @@ folks.weekly.chain = {
 -- =========================================================================
 local quest_ram_cache = {} -- Holds active online player quest metrics
 local dirty_players = {}    -- Tracking set for players who have unsaved actions pending
+local active_uis = {}       -- Hot tracking set for players who currently have the interface open
 local save_timer = 0
 
 -- 1. Intelligent Dual-Layer Context Loader
@@ -123,6 +124,7 @@ core.register_on_leaveplayer(function(player)
     dirty_players[player_name] = nil
   end
   quest_ram_cache[player_name] = nil
+  active_uis[player_name] = nil -- Clear active UI status out of memory
 end)
 
 -- Crash Guard: Force database write immediately on server shutdown sequences
@@ -134,6 +136,8 @@ end)
 
 -- 2. Formspec GUI Frame Layout (Pulls instantly from RAM data cache)
 function folks.weekly.show_interface(player_name)
+  active_uis[player_name] = true -- Mark player as actively looking at the screen
+  
   local data = load_weekly_data(player_name)
   local current_step = data.current_step
   
@@ -240,6 +244,11 @@ function folks.weekly.add_progress(player, item_name, count)
       end
     end
     save_weekly_data(player_name, data)
+
+    -- LIVE INTERFACE REFRESH: Force re-draw if they are staring at the interface right now
+    if active_uis[player_name] then
+      folks.weekly.show_interface(player_name)
+    end
   end
 end
 
@@ -247,6 +256,16 @@ end
 core.register_on_dignode(function(pos, oldnode, oldmetadata, digger)
   if not digger or not digger:is_player() then return end
   folks.weekly.add_progress(digger, oldnode.name, 1)
+end)
+
+-- 5. Formspec Response Listener (Removes tracking handles cleanly when user exits)
+core.register_on_player_receive_fields(function(player, formname, fields)
+  if formname == "folks:weekly_log" then
+    if fields.quit or fields.key_enter then
+      local player_name = player:get_player_name()
+      active_uis[player_name] = nil
+    end
+  end
 end)
 
 return folks.weekly
