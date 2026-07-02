@@ -131,7 +131,8 @@ function folks.weekly.show_interface(player_name)
   core.show_formspec(player_name, "folks:weekly_log", formspec)
 end
 
--- Progress Processor Function
+-- 3. Core Progress Processor API
+-- Can be called globally from external files (e.g., crops.lua on_dig bypass sequences)
 function folks.weekly.add_progress(player, item_name, count)
   if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
@@ -150,12 +151,18 @@ function folks.weekly.add_progress(player, item_name, count)
         local reward_gold = ItemStack("default:gold 50")
         local reward_minegeld = ItemStack("currency:minegeld 1")
         
-        -- FIX: Safe item addition that drops items at feet if inventory is physically tight
-        if inv:room_for_item("main", reward_gold) then inv:add_item("main", reward_gold)
-        else core.add_item(player:get_pos(), reward_gold) end
+        -- Safe item addition that drops items at feet if inventory is physically full
+        if inv:room_for_item("main", reward_gold) then 
+          inv:add_item("main", reward_gold)
+        else 
+          core.add_item(player:get_pos(), reward_gold) 
+        end
         
-        if inv:room_for_item("main", reward_minegeld) then inv:add_item("main", reward_minegeld)
-        else core.add_item(player:get_pos(), reward_minegeld) end
+        if inv:room_for_item("main", reward_minegeld) then 
+          inv:add_item("main", reward_minegeld)
+        else 
+          core.add_item(player:get_pos(), reward_minegeld) 
+        end
       end
 
       core.chat_send_player(player_name, core.colorize("#00ff00", "[Weekly Terminal]: Step objective complete! " .. cfg.title))
@@ -167,7 +174,7 @@ function folks.weekly.add_progress(player, item_name, count)
         data.completed_all = true
         core.chat_send_player(player_name, core.colorize("#00f0ff", "[Weekly Terminal]: Outstanding execution! All 4 weekly directives are secure."))
       else
-        -- FIX: Bounds checking to completely prevent indexing nil values on final quest exit
+        -- Bounds checking to completely prevent indexing nil values on final quest completion
         local next_cfg = folks.weekly.chain[data.current_step]
         if next_cfg then
           core.chat_send_player(player_name, core.colorize("#00aaff", "[Weekly Terminal]: Next sequential protocol online: " .. next_cfg.title))
@@ -178,7 +185,7 @@ function folks.weekly.add_progress(player, item_name, count)
   end
 end
 
--- 3. Mining Traditional Blocks (Stone, Gemstones)
+-- 4. Global Mining Listener (Catches standard stone, gemstone ores, and non-bypassed nodes)
 core.register_on_dignode(function(pos, oldnode, oldmetadata, digger)
   if not digger or not digger:is_player() then return end
   folks.weekly.add_progress(digger, oldnode.name, 1)
