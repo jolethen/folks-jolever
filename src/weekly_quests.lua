@@ -1,271 +1,187 @@
--- src/weekly_quests.lua
--- High-Performance Sandbox-Safe Weekly Quest Engine with RAM Caching & Live UI Updates
+-- src/sellable_quests.lua
+-- Witch-Style Bulk "Sellable" Quest Supply Terminal for Techblox
 
 local S = core.get_translator("folks")
-local storage = core.get_mod_storage() -- Native storage API: Sandbox-safe out of the box
+local storage = core.get_mod_storage()
+local weekly_sys = {} -- Renamed to match roles.lua expected global identifier
 
-if not folks then folks = {} end
--- Prevent overwriting the namespace if another file initialized it first
-if not folks.weekly then folks.weekly = {} end
-
--- Master Definition of the 4 Weekly Chain Quests
-folks.weekly.chain = {
-  [1] = {
-    id = "weekly_barley",
-    title = "Weekly Operation: Agricultural Reclaiming",
-    description = "Harvest and clear out standard agricultural fields to secure basic supplies.",
-    target_count = 1500,
-    target_items = { 
-      ["techblox_ores:mmo_barley_8"] = true, 
-      ["x_farming:barley_8"] = true
-    },
-    progress_label = "Barley harvested: ",
-    short_name = "1. Barley"
+-- 1. CONFIGURATION: Define tracking structures and targets cleanly
+local QUESTS = {
+  barley = {
+    item = "techblox_ores:mmo_barley_8",
+    alt_items = { "x_farming:barley_8", "x_farming:barley" },
+    goal = 1500,
+    title = "Bulk Barley Shipment"
   },
-  [2] = {
-    id = "weekly_stone",
-    title = "Weekly Operation: Subterranean Clearing",
-    description = "Examine and break down structural stones to secure core infrastructure lines.",
-    target_count = 1500,
-    target_items = { ["default:stone"] = true },
-    progress_label = "Stone mined: ",
-    short_name = "2. Stone"
+  stone = {
+    item = "default:stone",
+    goal = 1500,
+    title = "Subterranean Stone Supply"
   },
-  [3] = {
-    id = "weekly_earth",
-    title = "Weekly Operation: Earth Core Extraction",
-    description = "Mine down deep into core matrix lines to secure Earth Gemstone Ores.",
-    target_count = 25,
-    target_items = { ["magic_materials:earth_gemstone"] = true },
-    progress_label = "Earth Gemstones mined: ",
-    short_name = "3. Earth"
+  earth = {
+    item = "magic_materials:earth_gemstone",
+    goal = 25,
+    title = "Earth Core Extraction"
   },
-  [4] = {
-    id = "weekly_lightning",
-    title = "Weekly Operation: High-Voltage Synthesis",
-    description = "Recover rare Lightning Gemstone Ores to supercharge the main sector grids.",
-    target_count = 25,
-    target_items = { ["magic_materials:light_gemstone"] = true },
-    progress_label = "Lightning Gemstones mined: ",
-    short_name = "4. Lightning"
+  lightning = {
+    item = "magic_materials:light_gemstone",
+    goal = 25,
+    title = "High-Voltage Light Gems"
   }
 }
 
--- =========================================================================
--- PERFORMANCE MODULE: SMART RAM CACHING & SELECTIVE FLUSHING
--- =========================================================================
-local quest_ram_cache = {} -- Holds active online player quest metrics
-local dirty_players = {}    -- Tracking set for players who have unsaved actions pending
-local active_uis = {}       -- Hot tracking set for players who currently have the interface open
-local save_timer = 0
-
--- 1. Intelligent Dual-Layer Context Loader
-local function load_weekly_data(player_name)
-  -- Layer A: Fast check memory allocation cache
-  if quest_ram_cache[player_name] then
-    return quest_ram_cache[player_name]
-  end
-
-  -- Layer B: Fallback check to database using existing key design layout
-  local raw = storage:get_string("weekly_save:" .. player_name)
+-- 2. PERSISTENCE LAYER LOGIC (Using memory-efficient lookup tables)
+local function get_player_progress(player_name)
+  local raw = storage:get_string("sellable_prog:" .. player_name)
   if raw and raw ~= "" then
     local success, data = pcall(core.deserialize, raw)
     if success and type(data) == "table" then
-      data.current_step = data.current_step or 1
-      data.progress = data.progress or 0
-      data.completed_all = data.completed_all or false
-      
-      quest_ram_cache[player_name] = data -- Load into hot cache
       return data
     end
   end
-
-  -- Layer C: Generate brand new structured log if no historical data exists
-  local new_data = { current_step = 1, progress = 0, completed_all = false }
-  quest_ram_cache[player_name] = new_data
-  dirty_players[player_name] = true -- Mark dirty so it writes out on cycle
-  return new_data
+  return { barley = 0, stone = 0, earth = 0, lightning = 0 }
 end
 
-local function save_weekly_data(player_name, data)
-  quest_ram_cache[player_name] = data
-  dirty_players[player_name] = true -- Queue profile for deferred storage save
+local function save_player_progress(player_name, data)
+  storage:set_string("sellable_prog:" .. player_name, core.serialize(data))
 end
 
--- Process all flagged pending updates safely down to mod_storage
-local function flush_dirty_cache_to_disk()
-  local write_count = 0
-  for player_name, _ in pairs(dirty_players) do
-    if quest_ram_cache[player_name] then
-      storage:set_string("weekly_save:" .. player_name, core.serialize(quest_ram_cache[player_name]))
-      write_count = write_count + 1
-    end
-  end
-  dirty_players = {} -- Clear tracking log completely
-  if write_count > 0 then
-    core.log("action", "[Weekly Engine]: Sync phase secure. Saved changes for " .. write_count .. " profile(s).")
-  end
-end
-
--- 60-Second Cyclic Interval Global Step Ticker
-core.register_globalstep(function(dtime)
-  save_timer = save_timer + dtime
-  if save_timer >= 60 then
-    flush_dirty_cache_to_disk()
-    save_timer = 0
-  end
-end)
-
--- Garbage Collection: Clean cache allocations when players disconnect to prevent leaks
-core.register_on_leaveplayer(function(player)
-  local player_name = player:get_player_name()
-  if dirty_players[player_name] and quest_ram_cache[player_name] then
-    storage:set_string("weekly_save:" .. player_name, core.serialize(quest_ram_cache[player_name]))
-    dirty_players[player_name] = nil
-  end
-  quest_ram_cache[player_name] = nil
-  active_uis[player_name] = nil -- Clear active UI status out of memory
-end)
-
--- Crash Guard: Force database write immediately on server shutdown sequences
-core.register_on_shutdown(function()
-  core.log("action", "[Weekly Engine]: Intercepting shutdown command. Emergency writing active data pools...")
-  flush_dirty_cache_to_disk()
-end)
--- =========================================================================
-
--- 2. Formspec GUI Frame Layout (Pulls instantly from RAM data cache)
-function folks.weekly.show_interface(player_name)
-  active_uis[player_name] = true -- Mark player as actively looking at the screen
+-- 3. FORMSPEC GUI LOBBY (Sleek and Modern Redesign Layout)
+function weekly_sys.show_interface(player_name)
+  local progress_data = get_player_progress(player_name)
   
-  local data = load_weekly_data(player_name)
-  local current_step = data.current_step
-  
-  local cfg = folks.weekly.chain[current_step] or folks.weekly.chain[4]
-
   local formspec = 
-    "size[9.5,8.5]" ..
+    "size[9.5,9.0]" ..
     "real_coordinates[true]" ..
-    "background[0,0;9.5,8.5;#11161b;true]" ..
-    "box[0,0;9.5,0.1;#00f0ff]" ..
-    "label[0.6,0.6;" .. core.colorize("#00f0ff", "WEEKLY TERMINAL INTERFACE") .. "]" ..
+    "background[0,0;9.5,9.0;#161224;true]" .. -- Dark purple/witchy tint atmosphere
+    "box[0,0;9.5,0.1;#a832a4]" ..
+    "label[0.6,0.6;" .. core.colorize("#e066ff", "WITCH'S BULK SUPPLY TERMINAL") .. "]" ..
     "box[0.6,1.0;8.3,0.02;#ffffff15]"
 
-  if data.completed_all or current_step > 4 then
-    formspec = formspec .. 
-      "label[2.2,2.8;" .. core.colorize("#00ff00", "All operations completed for this weekly sequence!") .. "]" ..
-      "label[3.0,3.4;" .. core.colorize("#8899a6", "Check back next week for fresh terminal links.") .. "]"
-  else
-    formspec = formspec ..
-      "label[0.6,1.4;" .. core.colorize("#ffffff", cfg.title) .. "]" ..
-      "textarea[0.6,1.9;8.3,1.0;weekly_desc;;" .. cfg.description .. "]" ..
-      
-      "box[0.6,3.2;8.3,1.4;#ffffff03]" ..
-      "label[0.9,3.5;" .. core.colorize("#a6b2c0", "CURRENT OBJECTIVE PROGRESS:") .. "]" ..
-      "label[0.9,4.1;" .. core.colorize("#ffaa00", cfg.progress_label .. data.progress .. " / " .. cfg.target_count) .. "]" ..
-      
-      "label[5.5,3.5;" .. core.colorize("#a6b2c0", "ASSIGNMENT PAYLOAD:") .. "]" ..
-      "label[5.5,4.1;" .. core.colorize("#00ff00", "50 Gold & 1 Minegeld") .. "]"
-  end
+  -- Ordered keys array to loop-render rows predictably
+  local order = {"barley", "stone", "earth", "lightning"}
+  local start_y = 1.3
 
-  formspec = formspec .. "box[0.6,5.1;8.3,0.02;#ffffff15]" ..
-                         "label[0.6,5.5;" .. core.colorize("#a6b2c0", "CHAIN INDEX TRACKER:") .. "]"
-  
-  local slot_x = 0.6
-  for idx = 1, 4 do
-    local chain_cfg = folks.weekly.chain[idx]
-    local status_str = ""
+  for _, key in ipairs(order) do
+    local cfg = QUESTS[key]
+    local current = progress_data[key] or 0
     
-    if data.completed_all or idx < current_step then
-      status_str = core.colorize("#00ff00", "COMPLETED")
-    elseif idx == current_step and not data.completed_all then
-      status_str = core.colorize("#ffaa00", data.progress .. "/" .. chain_cfg.target_count)
+    local status_text
+    if current >= cfg.goal then
+      status_text = core.colorize("#00ff00", "COMPLETED (50$ Milestone Secured)")
     else
-      status_str = core.colorize("#556677", "LOCKED")
+      status_text = core.colorize("#a6b2c0", "Progress: " .. current .. " / " .. cfg.goal)
     end
-    
+
     formspec = formspec .. 
-      "box[" .. slot_x .. ",5.9;1.9,1.1;#ffffff02]" ..
-      "label[" .. (slot_x + 0.15) .. ",6.1;" .. core.colorize("#ffffff", chain_cfg.short_name) .. "]" ..
-      "label[" .. (slot_x + 0.15) .. ",6.6;" .. status_str .. "]"
+      "box[0.6," .. start_y .. ";8.3,1.3;#ffffff03]" ..
+      "item_image[0.9," .. (start_y + 0.15) .. ";1.0,1.0;" .. cfg.item .. "]" ..
+      "label[2.1," .. (start_y + 0.4) .. ";" .. core.colorize("#ffffff", cfg.title) .. "]" ..
+      "label[2.1," .. (start_y + 0.85) .. ";" .. status_text .. "]" ..
+      "button[6.5," .. (start_y + 0.3) .. ";2.1,0.7;deposit_" .. key .. ";Deposit]"
       
-    slot_x = slot_x + 2.1
+    start_y = start_y + 1.5
   end
 
-  formspec = formspec .. "button_exit[3.7,7.4;2.1,0.6;quit;Disconnect]"
-  core.show_formspec(player_name, "folks:weekly_log", formspec)
+  formspec = formspec .. "button_exit[3.7,7.7;2.1,0.6;quit;Leave Terminal]"
+
+  core.show_formspec(player_name, "folks:weeklyquests", formspec)
 end
 
--- 3. Core Progress Processor API
-function folks.weekly.add_progress(player, item_name, count)
-  if not player or not player:is_player() then return end
+-- 4. HOOK ENTRY (Matching roles.lua standard configuration execution)
+function weekly_sys.on_interact(player, npc_self)
   local player_name = player:get_player_name()
-  local data = load_weekly_data(player_name)
-  if data.completed_all or data.current_step > 4 then return end
-
-  local cfg = folks.weekly.chain[data.current_step]
-  if not cfg then return end
-  
-  if cfg.target_items[item_name] then
-    data.progress = data.progress + (count or 1)
-    
-    if data.progress >= cfg.target_count then
-      local inv = player:get_inventory()
-      if inv then
-        local reward_gold = ItemStack("default:gold 50")
-        local reward_minegeld = ItemStack("currency:minegeld 1")
-        
-        if inv:room_for_item("main", reward_gold) then 
-          inv:add_item("main", reward_gold)
-        else 
-          core.add_item(player:get_pos(), reward_gold) 
-        end
-        
-        if inv:room_for_item("main", reward_minegeld) then 
-          inv:add_item("main", reward_minegeld)
-        else 
-          core.add_item(player:get_pos(), reward_minegeld) 
-        end
-      end
-
-      core.chat_send_player(player_name, core.colorize("#00ff00", "[Weekly Terminal]: Step objective complete! " .. cfg.title))
-      
-      data.current_step = data.current_step + 1
-      data.progress = 0
-      
-      if data.current_step > 4 then
-        data.completed_all = true
-        core.chat_send_player(player_name, core.colorize("#00f0ff", "[Weekly Terminal]: Outstanding execution! All 4 weekly directives are secure."))
-      else
-        local next_cfg = folks.weekly.chain[data.current_step]
-        if next_cfg then
-          core.chat_send_player(player_name, core.colorize("#00aaff", "[Weekly Terminal]: Next sequential protocol online: " .. next_cfg.title))
-        end
-      end
-    end
-    save_weekly_data(player_name, data)
-
-    -- LIVE INTERFACE REFRESH: Force re-draw if they are staring at the interface right now
-    if active_uis[player_name] then
-      folks.weekly.show_interface(player_name)
-    end
-  end
+  weekly_sys.show_interface(player_name)
 end
 
--- 4. Global Mining Listener (Catches standard stone, gemstone ores, and non-bypassed nodes)
-core.register_on_dignode(function(pos, oldnode, oldmetadata, digger)
-  if not digger or not digger:is_player() then return end
-  folks.weekly.add_progress(digger, oldnode.name, 1)
-end)
+-- 5. INTERACTIVE TRANSACTION PROCESSOR
+local function handle_bulk_deposit(player, key)
+  local player_name = player:get_player_name()
+  local inv = player:get_inventory()
+  if not inv then return end
 
--- 5. Formspec Response Listener (Removes tracking handles cleanly when user exits)
-core.register_on_player_receive_fields(function(player, formname, fields)
-  if formname == "folks:weekly_log" then
-    if fields.quit or fields.key_enter then
-      local player_name = player:get_player_name()
-      active_uis[player_name] = nil
+  local cfg = QUESTS[key]
+  local progress_data = get_player_progress(player_name)
+  local current_amount = progress_data[key] or 0
+
+  -- Check if they are already done with this task
+  if current_amount >= cfg.goal then
+    core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: This requirement loop is completely filled already! Drop items elsewhere."))
+    return
+  end
+
+  -- Scan for primary item total in inventory first
+  local count = inv:get_stack_count(cfg.item)
+  local item_to_use = cfg.item
+
+  -- Dynamic loop check over alternative names if primary is not found
+  if count == 0 and cfg.alt_items then
+    for _, alt_name in ipairs(cfg.alt_items) do
+      local alt_count = inv:get_stack_count(alt_name)
+      if alt_count > 0 then
+        count = alt_count
+        item_to_use = alt_name
+        break
+      end
     end
+  end
+
+  if count <= 0 then
+    core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: Verification failed. You have no valid supplies for this drop."))
+    return
+  end
+
+  -- Calculation: figure out how much we actually need vs what player has in pockets
+  local amount_needed = cfg.goal - current_amount
+  local transfer_amount = math.min(count, amount_needed)
+
+  -- Deduct cleanly from inventory
+  local remove_stack = ItemStack(item_to_use .. " " .. transfer_amount)
+  inv:remove_item("main", remove_stack)
+
+  -- Save new state math calculations
+  local new_amount = current_amount + transfer_amount
+  progress_data[key] = new_amount
+  save_player_progress(player_name, progress_data)
+
+  core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Deposited " .. transfer_amount .. "x items into the terminal cluster."))
+
+  -- MILESTONE TRIGGER CHECK: Checks if transition values crossed the max target exactly this transaction
+  if new_amount >= cfg.goal then
+    local pay_stack = ItemStack("currency:minegeld 50")
+    
+    if inv:room_for_item("main", pay_stack) then
+      inv:add_item("main", pay_stack)
+    else
+      core.add_item(player:get_pos(), pay_stack)
+    end
+
+    core.chat_send_player(player_name, core.colorize("#00ff00", "[Witch]: Directive complete! Milestone secured. +50 Minegeld notes dispatched!"))
+    core.sound_play("default_cool_lava", {to_player = player_name, gain = 1.0}, true)
+  end
+
+  -- Dynamic live screen redraw matching refresh specs
+  weekly_sys.show_interface(player_name)
+end
+
+-- 6. GUI SELECTION PROCESSOR
+core.register_on_player_receive_fields(function(player, formname, fields)
+  if formname ~= "folks:weeklyquests" then return false end
+  if not player or not player:is_player() then return true end
+
+  if fields.deposit_barley then
+    handle_bulk_deposit(player, "barley")
+    return true
+  elseif fields.deposit_stone then
+    handle_bulk_deposit(player, "stone")
+    return true
+  elseif fields.deposit_earth then
+    handle_bulk_deposit(player, "earth")
+    return true
+  elseif fields.deposit_lightning then
+    handle_bulk_deposit(player, "lightning")
+    return true
   end
 end)
 
-return folks.weekly
+return weekly_sys
