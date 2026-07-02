@@ -109,9 +109,10 @@ roles.registry = {
   ["weeklyquests"] = {
     action = function(player, npc_self)
       if weekly_sys then
-        weekly_sys.show_interface(player:get_player_name())
+        -- Pass the player object instead of just the name string
+        weekly_sys.show_interface(player)
       else
-        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
+        minetest.chat_send_player(player:get_player_name(), minetest.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
       end
     end
   },
