@@ -1,11 +1,11 @@
 -- src/weekly_quests.lua
--- Weekly Quest Chain Handling Engine for Techblox
+-- High-Performance Sandbox-Safe Weekly Quest Engine with RAM Caching
 
 local S = core.get_translator("folks")
-local storage = core.get_mod_storage()
+local storage = core.get_mod_storage() -- Native storage API: Sandbox-safe out of the box
 
 if not folks then folks = {} end
--- FIX: Prevent overwriting the namespace if another file initialized it first
+-- Prevent overwriting the namespace if another file initialized it first
 if not folks.weekly then folks.weekly = {} end
 
 -- Master Definition of the 4 Weekly Chain Quests
@@ -51,31 +51,92 @@ folks.weekly.chain = {
   }
 }
 
--- 1. DB Loader & Saver for Weekly Progression Context
+-- =========================================================================
+-- PERFORMANCE MODULE: SMART RAM CACHING & SELECTIVE FLUSHING
+-- =========================================================================
+local quest_ram_cache = {} -- Holds active online player quest metrics
+local dirty_players = {}    -- Tracking set for players who have unsaved actions pending
+local save_timer = 0
+
+-- 1. Intelligent Dual-Layer Context Loader
 local function load_weekly_data(player_name)
+  -- Layer A: Fast check memory allocation cache
+  if quest_ram_cache[player_name] then
+    return quest_ram_cache[player_name]
+  end
+
+  -- Layer B: Fallback check to database using existing key design layout
   local raw = storage:get_string("weekly_save:" .. player_name)
   if raw and raw ~= "" then
-    local data = core.deserialize(raw)
-    if type(data) == "table" then
+    local success, data = pcall(core.deserialize, raw)
+    if success and type(data) == "table" then
       data.current_step = data.current_step or 1
       data.progress = data.progress or 0
       data.completed_all = data.completed_all or false
+      
+      quest_ram_cache[player_name] = data -- Load into hot cache
       return data
     end
   end
-  return { current_step = 1, progress = 0, completed_all = false }
+
+  -- Layer C: Generate brand new structured log if no historical data exists
+  local new_data = { current_step = 1, progress = 0, completed_all = false }
+  quest_ram_cache[player_name] = new_data
+  dirty_players[player_name] = true -- Mark dirty so it writes out on cycle
+  return new_data
 end
 
 local function save_weekly_data(player_name, data)
-  storage:set_string("weekly_save:" .. player_name, core.serialize(data))
+  quest_ram_cache[player_name] = data
+  dirty_players[player_name] = true -- Queue profile for deferred storage save
 end
 
--- 2. Formspec GUI Frame Layout
+-- Process all flagged pending updates safely down to mod_storage
+local function flush_dirty_cache_to_disk()
+  local write_count = 0
+  for player_name, _ in pairs(dirty_players) do
+    if quest_ram_cache[player_name] then
+      storage:set_string("weekly_save:" .. player_name, core.serialize(quest_ram_cache[player_name]))
+      write_count = write_count + 1
+    end
+  end
+  dirty_players = {} -- Clear tracking log completely
+  if write_count > 0 then
+    core.log("action", "[Weekly Engine]: Sync phase secure. Saved changes for " .. write_count .. " profile(s).")
+  end
+end
+
+-- 60-Second Cyclic Interval Global Step Ticker
+core.register_globalstep(function(dtime)
+  save_timer = save_timer + dtime
+  if save_timer >= 60 then
+    flush_dirty_cache_to_disk()
+    save_timer = 0
+  end
+end)
+
+-- Garbage Collection: Clean cache allocations when players disconnect to prevent leaks
+core.register_on_leaveplayer(function(player)
+  local player_name = player:get_player_name()
+  if dirty_players[player_name] and quest_ram_cache[player_name] then
+    storage:set_string("weekly_save:" .. player_name, core.serialize(quest_ram_cache[player_name]))
+    dirty_players[player_name] = nil
+  end
+  quest_ram_cache[player_name] = nil
+end)
+
+-- Crash Guard: Force database write immediately on server shutdown sequences
+core.register_on_shutdown(function()
+  core.log("action", "[Weekly Engine]: Intercepting shutdown command. Emergency writing active data pools...")
+  flush_dirty_cache_to_disk()
+end)
+-- =========================================================================
+
+-- 2. Formspec GUI Frame Layout (Pulls instantly from RAM data cache)
 function folks.weekly.show_interface(player_name)
   local data = load_weekly_data(player_name)
   local current_step = data.current_step
   
-  -- FIX: Safe fallback lookup to prevent formspec nil crashes on completion screen
   local cfg = folks.weekly.chain[current_step] or folks.weekly.chain[4]
 
   local formspec = 
@@ -132,7 +193,6 @@ function folks.weekly.show_interface(player_name)
 end
 
 -- 3. Core Progress Processor API
--- Can be called globally from external files (e.g., crops.lua on_dig bypass sequences)
 function folks.weekly.add_progress(player, item_name, count)
   if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
@@ -151,7 +211,6 @@ function folks.weekly.add_progress(player, item_name, count)
         local reward_gold = ItemStack("default:gold 50")
         local reward_minegeld = ItemStack("currency:minegeld 1")
         
-        -- Safe item addition that drops items at feet if inventory is physically full
         if inv:room_for_item("main", reward_gold) then 
           inv:add_item("main", reward_gold)
         else 
@@ -174,7 +233,6 @@ function folks.weekly.add_progress(player, item_name, count)
         data.completed_all = true
         core.chat_send_player(player_name, core.colorize("#00f0ff", "[Weekly Terminal]: Outstanding execution! All 4 weekly directives are secure."))
       else
-        -- Bounds checking to completely prevent indexing nil values on final quest completion
         local next_cfg = folks.weekly.chain[data.current_step]
         if next_cfg then
           core.chat_send_player(player_name, core.colorize("#00aaff", "[Weekly Terminal]: Next sequential protocol online: " .. next_cfg.title))
