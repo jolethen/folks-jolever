@@ -1,11 +1,11 @@
--- src/sellable_quests.lua
+-- src/weekly_quests.lua
 -- Witch-Style Bulk "Sellable" Quest Supply Terminal for Techblox
 
 local S = core.get_translator("folks")
 local storage = core.get_mod_storage()
 
--- Expose weekly_sys globally so roles.lua can safely index it
-weekly_sys = {} 
+-- Fixed to a local instantiation so loadfile captures the return payload
+local weekly_quests_system = {} 
 
 -- 1. CONFIGURATION: Define tracking structures and targets cleanly
 local QUESTS = {
@@ -58,7 +58,7 @@ local function save_player_progress(player_name, data)
 end
 
 -- 3. FORMSPEC GUI LOBBY
-function weekly_sys.show_interface(player_name)
+function weekly_quests_system.show_interface(player_name)
   if not player_name then return end
   
   local progress_data = get_player_progress(player_name)
@@ -102,15 +102,15 @@ function weekly_sys.show_interface(player_name)
 end
 
 -- 4. HOOK ENTRY
-function weekly_sys.on_interact(player, npc_self)
+function weekly_quests_system.on_interact(player, npc_self)
   if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
   if player_name then
-    weekly_sys.show_interface(player_name)
+    weekly_quests_system.show_interface(player_name)
   end
 end
 
--- 5. INTERACTIVE TRANSACTION PROCESSOR (Using native contains_item / remove_item API styles)
+-- 5. INTERACTIVE TRANSACTION PROCESSOR
 local function handle_bulk_deposit(player, key)
   if not player or not player:is_player() then return end
   
@@ -130,26 +130,23 @@ local function handle_bulk_deposit(player, key)
     return
   end
 
-  -- Determine which item pool candidate to test first based on priority stack
   local item_to_remove = nil
   local amount_to_remove = 0
 
-  -- Check primary item registry entry first
   for amt = math.min(99, amount_needed), 1, -1 do
     local check_stack = ItemStack(cfg.item .. " " .. amt)
-    if inv:contains_item("main", check_stack) then[cite: 5]
+    if inv:contains_item("main", check_stack) then
       item_to_remove = cfg.item
       amount_to_remove = amt
       break
     end
   end
 
-  -- Check alternative lists sequentially if the primary item wasn't found in bags
   if not item_to_remove and cfg.alt_items then
     for _, alt_item in ipairs(cfg.alt_items) do
       for amt = math.min(99, amount_needed), 1, -1 do
         local check_stack = ItemStack(alt_item .. " " .. amt)
-        if inv:contains_item("main", check_stack) then[cite: 5]
+        if inv:contains_item("main", check_stack) then
           item_to_remove = alt_item
           amount_to_remove = amt
           break
@@ -164,23 +161,20 @@ local function handle_bulk_deposit(player, key)
     return
   end
 
-  -- Safe execution via native InvRef method pools
   local remove_stack = ItemStack(item_to_remove .. " " .. amount_to_remove)
-  inv:remove_item("main", remove_stack)[cite: 5]
+  inv:remove_item("main", remove_stack)
 
-  -- Save step-math values safely
   local new_amount = current_amount + amount_to_remove
   progress_data[key] = new_amount
   save_player_progress(player_name, progress_data)
 
   core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Deposited " .. amount_to_remove .. "x items into the terminal cluster."))
 
-  -- Milestone Trigger Check
   if new_amount >= cfg.goal then
     local pay_stack = ItemStack("currency:minegeld 50")
     
-    if inv:room_for_item("main", pay_stack) then[cite: 5]
-      inv:add_item("main", pay_stack)[cite: 5]
+    if inv:room_for_item("main", pay_stack) then
+      inv:add_item("main", pay_stack)
     else
       local pos = player:get_pos()
       if pos then
@@ -192,14 +186,13 @@ local function handle_bulk_deposit(player, key)
     core.sound_play("default_cool_lava", {to_player = player_name, gain = 1.0}, true)
   end
 
-  -- Live screen update
-  weekly_sys.show_interface(player_name)
+  weekly_quests_system.show_interface(player_name)
 end
 
 -- 6. GUI SELECTION PROCESSOR
 core.register_on_player_receive_fields(function(player, formname, fields)
-  if formname ~= "folks:weeklyquests" then return false end[cite: 5]
-  if not player or not player:is_player() then return true end[cite: 5]
+  if formname ~= "folks:weeklyquests" then return false end
+  if not player or not player:is_player() then return true end
 
   if fields.deposit_barley then
     handle_bulk_deposit(player, "barley")
@@ -216,4 +209,4 @@ core.register_on_player_receive_fields(function(player, formname, fields)
   end
 end)
 
-return weekly_sys
+return weekly_quests_system
