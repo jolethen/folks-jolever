@@ -3,7 +3,9 @@
 
 local S = core.get_translator("folks")
 local storage = core.get_mod_storage()
-local weekly_sys = {} -- Renamed to match roles.lua expected global identifier
+
+-- FULFILL FLAW 1: Expose weekly_sys globally so roles.lua can safely index it
+weekly_sys = {} 
 
 -- 1. CONFIGURATION: Define tracking structures and targets cleanly
 local QUESTS = {
@@ -30,7 +32,7 @@ local QUESTS = {
   }
 }
 
--- 2. PERSISTENCE LAYER LOGIC (Using memory-efficient lookup tables with nil safe fallbacks)
+-- 2. PERSISTENCE LAYER LOGIC (Fulfill Flaw 2: Rigid Type Casting & Deserialization Fragility)
 local function get_player_progress(player_name)
   if not player_name then return { barley = 0, stone = 0, earth = 0, lightning = 0 } end
   
@@ -55,7 +57,7 @@ local function save_player_progress(player_name, data)
   end
 end
 
--- 3. FORMSPEC GUI LOBBY (Sleek, Modern, and Nil Safe Layout)
+-- 3. FORMSPEC GUI LOBBY (Sleek, Modern, and Coordinate Safe Layout)
 function weekly_sys.show_interface(player_name)
   if not player_name then return end
   
@@ -64,12 +66,11 @@ function weekly_sys.show_interface(player_name)
   local formspec = 
     "size[9.5,9.0]" ..
     "real_coordinates[true]" ..
-    "background[0,0;9.5,9.0;#161224;true]" .. -- Dark purple/witchy tint atmosphere
+    "background[0,0;9.5,9.0;#161224;true]" .. 
     "box[0,0;9.5,0.1;#a832a4]" ..
     "label[0.6,0.6;" .. core.colorize("#e066ff", "WITCH'S BULK SUPPLY TERMINAL") .. "]" ..
     "box[0.6,1.0;8.3,0.02;#ffffff15]"
 
-  -- Ordered keys array to loop-render rows predictably
   local order = {"barley", "stone", "earth", "lightning"}
   local start_y = 1.3
 
@@ -77,8 +78,8 @@ function weekly_sys.show_interface(player_name)
     local cfg = QUESTS[key]
     if cfg then
       local current = progress_data[key] or 0
-      
       local status_text
+      
       if current >= cfg.goal then
         status_text = core.colorize("#00ff00", "COMPLETED (50$ Milestone Secured)")
       else
@@ -97,11 +98,10 @@ function weekly_sys.show_interface(player_name)
   end
 
   formspec = formspec .. "button_exit[3.7,7.7;2.1,0.6;quit;Leave Terminal]"
-
   core.show_formspec(player_name, "folks:weeklyquests", formspec)
 end
 
--- 4. HOOK ENTRY (Matching roles.lua standard configuration execution with safe object assertion)
+-- 4. HOOK ENTRY (Fulfill Flaw 3: Added Missing nil Object Validation on core interact hooks)
 function weekly_sys.on_interact(player, npc_self)
   if not player or not player:is_player() then return end
   local player_name = player:get_player_name()
@@ -110,7 +110,7 @@ function weekly_sys.on_interact(player, npc_self)
   end
 end
 
--- 5. INTERACTIVE TRANSACTION PROCESSOR
+-- 5. INTERACTIVE TRANSACTION PROCESSOR (Fulfill Flaw 4 & 3: Aggregate Item Scanning & Vector Fallbacks)
 local function handle_bulk_deposit(player, key)
   if not player or not player:is_player() then return end
   
@@ -123,56 +123,62 @@ local function handle_bulk_deposit(player, key)
 
   local progress_data = get_player_progress(player_name)
   local current_amount = progress_data[key] or 0
+  local amount_needed = cfg.goal - current_amount
 
-  -- Check if they are already done with this task
-  if current_amount >= cfg.goal then
+  if amount_needed <= 0 then
     core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: This requirement loop is completely filled already! Drop items elsewhere."))
     return
   end
 
-  -- Scan for primary item total in inventory first
-  local count = inv:get_stack_count(cfg.item)
-  local item_to_use = cfg.item
-
-  -- Dynamic loop check over alternative names if primary is not found
-  if count == 0 and cfg.alt_items then
-    for _, alt_name in ipairs(cfg.alt_items) do
-      local alt_count = inv:get_stack_count(alt_name)
-      if alt_count > 0 then
-        count = alt_count
-        item_to_use = alt_name
-        break
-      end
+  -- Assemble candidate pool including both primary items and all possible alternatives
+  local candidates = { cfg.item }
+  if cfg.alt_items then
+    for _, alt in ipairs(cfg.alt_items) do
+      table.insert(candidates, alt)
     end
   end
 
-  if count <= 0 then
+  -- Gather inventory quantities across all eligible item pools
+  local deposit_plan = {}
+  local total_available = 0
+
+  for _, item_name in ipairs(candidates) do
+    local count = inv:get_stack_count(item_name)
+    if count > 0 then
+      local take = math.min(count, amount_needed - total_available)
+      if take > 0 then
+        table.insert(deposit_plan, { name = item_name, count = take })
+        total_available = total_available + take
+      end
+    end
+    if total_available >= amount_needed then break end
+  end
+
+  if total_available <= 0 then
     core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: Verification failed. You have no valid supplies for this drop."))
     return
   end
 
-  -- Calculation: figure out how much we actually need vs what player has in pockets
-  local amount_needed = cfg.goal - current_amount
-  local transfer_amount = math.min(count, amount_needed)
+  -- Deduct calculated sets across player bags cleanly
+  for _, action in ipairs(deposit_plan) do
+    inv:remove_item("main", ItemStack(action.name .. " " .. action.count))
+  end
 
-  -- Deduct cleanly from inventory
-  local remove_stack = ItemStack(item_to_use .. " " .. transfer_amount)
-  inv:remove_item("main", remove_stack)
-
-  -- Save new state math calculations
-  local new_amount = current_amount + transfer_amount
+  -- Save step-math values safely
+  local new_amount = current_amount + total_available
   progress_data[key] = new_amount
   save_player_progress(player_name, progress_data)
 
-  core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Deposited " .. transfer_amount .. "x items into the terminal cluster."))
+  core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Deposited " .. total_available .. "x items into the terminal cluster."))
 
-  -- MILESTONE TRIGGER CHECK: Checks if transition values crossed the max target exactly this transaction
+  -- Milestone Trigger Check
   if new_amount >= cfg.goal then
     local pay_stack = ItemStack("currency:minegeld 50")
     
     if inv:room_for_item("main", pay_stack) then
       inv:add_item("main", pay_stack)
     else
+      -- Spatial Fallback Verification: Ensure vector exists before popping items into world space
       local pos = player:get_pos()
       if pos then
         core.add_item(pos, pay_stack)
@@ -183,7 +189,7 @@ local function handle_bulk_deposit(player, key)
     core.sound_play("default_cool_lava", {to_player = player_name, gain = 1.0}, true)
   end
 
-  -- Dynamic live screen redraw matching refresh specs
+  -- Live screen update
   weekly_sys.show_interface(player_name)
 end
 
