@@ -109,8 +109,8 @@ roles.registry = {
   ["weeklyquests"] = {
     action = function(player, npc_self)
       if weekly_sys then
-        -- Pass the player object instead of just the name string
-        weekly_sys.show_interface(player)
+        -- FIXED: Pass the string name to match weekly_quests.lua (9)_2.txt
+        weekly_sys.show_interface(player:get_player_name())
       else
         minetest.chat_send_player(player:get_player_name(), minetest.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
       end
@@ -126,6 +126,7 @@ roles.registry = {
         core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Witch transmuting altar offline."))
       end
     end
-  },
+  }
+} -- FIXED: Added missing closing brace for roles.registry
 
 return roles
