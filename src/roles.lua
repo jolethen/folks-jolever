@@ -111,7 +111,19 @@ roles.registry = {
       if weekly_sys and weekly_sys.on_interact then
         weekly_sys.on_interact(player, npc_self)
       else
-        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
+        -- Direct fallback execution right here if the file didn't return properly
+        local player_name = player:get_player_name()
+        if player_name and player_name ~= "" then
+          -- Run the file again directly to force execution if it's sitting raw in the directory
+          local weekly_file = loadfile(core.get_modpath("folks") .. "/src/weekly_quests.lua")
+          local running_sys = weekly_file and weekly_file()
+          
+          if running_sys and running_sys.on_interact then
+            running_sys.on_interact(player, npc_self)
+          else
+            core.chat_send_player(player_name, core.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
+          end
+        end
       end
     end
   },
