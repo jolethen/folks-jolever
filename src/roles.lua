@@ -105,17 +105,16 @@ roles.registry = {
     end
   },
 
-  -- New Weekly Quests Entry
+-- New Weekly Quests Entry
   ["weeklyquests"] = {
     action = function(player, npc_self)
-      if weekly_sys then
-        weekly_sys.show_interface(player:get_player_name())
+      if weekly_sys and weekly_sys.on_interact then
+        weekly_sys.on_interact(player, npc_self)
       else
-        minetest.chat_send_player(player:get_player_name(), minetest.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
+        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Weekly terminal interface offline."))
       end
     end
   },
-
   --- FIX: New Witch NPC Entry
   ["witch"] = {
     action = function(player, npc_self)
