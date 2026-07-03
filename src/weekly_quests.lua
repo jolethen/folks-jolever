@@ -29,7 +29,7 @@ local QUESTS = {
     title = "Stone Brick Collection"
   },
   copper = {
-    item = "default:cobblestone",
+    item = "default:cobble",
     goal = 2000,
     give_item = "currency:minegeld",
     give_count = 75,
