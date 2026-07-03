@@ -14,9 +14,19 @@ if quest_gui_file then
   quest_gui_file()
 end
 
--- Load the new Weekly quest script cleanly
-local weekly_file = loadfile(modpath .. "/src/weekly_quests.lua")
-local weekly_sys = weekly_file and weekly_file()
+-- Load the new Weekly quest script cleanly with an error check wrap
+local weekly_file, load_err = loadfile(modpath .. "/src/weekly_quests.lua")
+local weekly_sys = nil
+if weekly_file then
+  local success, result = pcall(weekly_file)
+  if success then
+    weekly_sys = result
+  else
+    core.log("error", "[Weekly Terminal] Initialization runtime crash: " .. tostring(result))
+  end
+else
+  core.log("error", "[Weekly Terminal] File loading crash/Missing path: " .. tostring(load_err))
+end
 
 -- FIX: Load the Witch module cleanly right here
 local witch_file = loadfile(modpath .. "/src/witch.lua")
