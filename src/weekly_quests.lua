@@ -19,21 +19,21 @@ local QUESTS = {
     goal = 200,
     give_item = "currency:minegeld",
     give_count = 50,
-    title = "Subterranean Stone Supply"
+    title = "Subterranean Wood Supply"
   },
   desert_stone = {
-    item = "default:stone_brick",
+    item = "default:stonebrick",
     goal = 650,
     give_item = "currency:minegeld",
     give_count = 50,
-    title = "Desert Stone Collection"
+    title = "Stone Brick Collection"
   },
   copper = {
     item = "default:cobblestone",
     goal = 2000,
     give_item = "currency:minegeld",
     give_count = 75,
-    title = "Bulk Stone Supply"
+    title = "Bulk Cobble Supply"
   }
 }
 
@@ -92,34 +92,34 @@ function weekly_sys.show_interface(player_name)
     "label[0.6,0.6;" .. core.colorize("#e066ff", "QUESTER") .. "]" ..
     "box[0.6,1.0;8.3,0.02;#ffffff15]" ..
     
-    -- Quest 1: Barley Slot
+    -- Quest 1: Barley/Wheat Slot
     "box[0.6,1.4;8.3,1.4;#ffffff03]" ..
     "item_image[0.9,1.6;1.0,1.0;" .. QUESTS.barley.item .. "]" ..
-    "label[2.2,1.7;" .. core.colorize("#ffffff", "Supply " .. QUESTS.barley.goal .. " Bulk Barley") .. "]" ..
+    "label[2.2,1.7;" .. core.colorize("#ffffff", "Supply " .. QUESTS.barley.goal .. "x " .. QUESTS.barley.title) .. "]" ..
     "label[2.2,2.1;" .. barley_status .. "]" ..
     "label[2.2,2.5;" .. core.colorize("#00ff00", "Reward: " .. QUESTS.barley.give_count .. " Minegeld") .. "]" ..
     "button[6.2,1.8;2.3,0.7;trade_barley;Deposit]" ..
     
-    -- Quest 2: Stone Slot
+    -- Quest 2: Tree/Wood Slot
     "box[0.6,3.0;8.3,1.4;#ffffff03]" ..
     "item_image[0.9,3.2;1.0,1.0;" .. QUESTS.stone.item .. "]" ..
-    "label[2.2,3.3;" .. core.colorize("#ffffff", "Supply " .. QUESTS.stone.goal .. " Subterranean Stone") .. "]" ..
+    "label[2.2,3.3;" .. core.colorize("#ffffff", "Supply " .. QUESTS.stone.goal .. "x " .. QUESTS.stone.title) .. "]" ..
     "label[2.2,3.7;" .. stone_status .. "]" ..
     "label[2.2,4.1;" .. core.colorize("#00f0ff", "Reward: " .. QUESTS.stone.give_count .. " Minegeld") .. "]" ..
     "button[6.2,3.4;2.3,0.7;trade_stone;Deposit]" ..
 
-    -- Quest 3: Desert Stone Slot
+    -- Quest 3: Stone Brick Slot
     "box[0.6,4.6;8.3,1.4;#ffffff03]" ..
     "item_image[0.9,4.8;1.0,1.0;" .. QUESTS.desert_stone.item .. "]" ..
-    "label[2.2,4.9;" .. core.colorize("#ffffff", "Supply " .. QUESTS.desert_stone.goal .. " Desert Stone") .. "]" ..
+    "label[2.2,4.9;" .. core.colorize("#ffffff", "Supply " .. QUESTS.desert_stone.goal .. "x " .. QUESTS.desert_stone.title) .. "]" ..
     "label[2.2,5.3;" .. desert_status .. "]" ..
     "label[2.2,5.7;" .. core.colorize("#ffaa00", "Reward: " .. QUESTS.desert_stone.give_count .. " Minegeld") .. "]" ..
     "button[6.2,5.0;2.3,0.7;trade_desert_stone;Deposit]" ..
 
-    -- Quest 4: Copper Lump Slot
+    -- Quest 4: Cobblestone Slot
     "box[0.6,6.2;8.3,1.4;#ffffff03]" ..
     "item_image[0.9,6.4;1.0,1.0;" .. QUESTS.copper.item .. "]" ..
-    "label[2.2,6.5;" .. core.colorize("#ffffff", "Supply " .. QUESTS.copper.goal .. " Copper Lumps") .. "]" ..
+    "label[2.2,6.5;" .. core.colorize("#ffffff", "Supply " .. QUESTS.copper.goal .. "x " .. QUESTS.copper.title) .. "]" ..
     "label[2.2,6.9;" .. copper_status .. "]" ..
     "label[2.2,7.3;" .. core.colorize("#e066ff", "Reward: " .. QUESTS.copper.give_count .. " Minegeld") .. "]" ..
     "button[6.2,6.6;2.3,0.7;trade_copper;Deposit]" ..
@@ -144,7 +144,7 @@ local function process_deposit(player, key)
 
   -- Safety verification
   if not core.registered_items[cfg.item] or not core.registered_items[cfg.give_item] then
-    core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: Matrix Error - Missing item definitions on server."))
+    core.chat_send_player(player_name, core.colorize("#ff3333", "[System]: Matrix Error - Missing item definitions on server."))
     return
   end
 
@@ -152,7 +152,7 @@ local function process_deposit(player, key)
   local amount_needed = cfg.goal - current_amount
 
   if amount_needed <= 0 then
-    core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: This requirement loop is completely filled already!"))
+    core.chat_send_player(player_name, core.colorize("#ff3333", "[System]: This requirement loop is completely filled already!"))
     return
   end
 
@@ -167,7 +167,7 @@ local function process_deposit(player, key)
   end
 
   if amount_to_take == 0 then
-    core.chat_send_player(player_name, core.colorize("#ff3333", "[Witch]: You don't have any of the required materials in your inventory to deposit."))
+    core.chat_send_player(player_name, core.colorize("#ff3333", "[System]: You don't have any of the required materials in your inventory to deposit."))
     return
   end
 
@@ -179,7 +179,7 @@ local function process_deposit(player, key)
   local new_amount = current_amount + amount_to_take
   save_progress(player_name, key, new_amount)
 
-  core.chat_send_player(player_name, core.colorize("#e066ff", "[Witch]: Stored " .. amount_to_take .. "x items into the terminal cluster."))
+  core.chat_send_player(player_name, core.colorize("#e066ff", "[System]: Stored " .. amount_to_take .. "x items into the storage pool."))
 
   -- If goal is reached, give payout
   if new_amount >= cfg.goal then
@@ -190,7 +190,7 @@ local function process_deposit(player, key)
       local pos = player:get_pos()
       if pos then core.add_item(pos, give_stack) end
     end
-    core.chat_send_player(player_name, core.colorize("#00ff00", "[Witch]: Directive complete! " .. cfg.title .. " finalized. Reward dispatched!"))
+    core.chat_send_player(player_name, core.colorize("#00ff00", "[System]: Directive complete! " .. cfg.title .. " finalized. Reward dispatched!"))
   end
 
   -- Refresh formspec view to update progress bar lines instantly
