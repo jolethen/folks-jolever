@@ -8,32 +8,32 @@ local weekly_sys = {}
 -- 1. CONFIGURATION: Define trade targets and limits clearly
 local QUESTS = {
   barley = {
-    item = "techblox_ores:mmo_barley_8",
-    goal = 1500,
+    item = "farming:wheat",
+    goal = 150,
     give_item = "currency:minegeld",
-    give_count = 50,
-    title = "Bulk Barley Shipment"
+    give_count = 25,
+    title = "Bulk Wheat Shipment"
   },
   stone = {
-    item = "default:stone",
-    goal = 1500,
+    item = "default:tree",
+    goal = 200,
     give_item = "currency:minegeld",
     give_count = 50,
     title = "Subterranean Stone Supply"
   },
   desert_stone = {
-    item = "default:desert_stone",
-    goal = 1500,
+    item = "default:stone_brick",
+    goal = 650,
     give_item = "currency:minegeld",
     give_count = 50,
     title = "Desert Stone Collection"
   },
   copper = {
-    item = "default:copper_lump",
-    goal = 500,
+    item = "default:cobblestone",
+    goal = 2000,
     give_item = "currency:minegeld",
     give_count = 75,
-    title = "Heavy Copper Reserve"
+    title = "Bulk Stone Supply"
   }
 }
 
@@ -89,7 +89,7 @@ function weekly_sys.show_interface(player_name)
     "real_coordinates[true]" ..
     "background[0,0;9.5,10.2;#161224;true]" .. 
     "box[0,0;9.5,0.1;#a832a4]" ..
-    "label[0.6,0.6;" .. core.colorize("#e066ff", "WITCH'S BULK SUPPLY TERMINAL") .. "]" ..
+    "label[0.6,0.6;" .. core.colorize("#e066ff", "QUESTER") .. "]" ..
     "box[0.6,1.0;8.3,0.02;#ffffff15]" ..
     
     -- Quest 1: Barley Slot
