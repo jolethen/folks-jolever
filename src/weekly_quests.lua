@@ -22,14 +22,14 @@ local QUESTS = {
     title = "Subterranean Wood Supply"
   },
   desert_stone = {
-    item = "default:stonebrick",
+    item = "default:stone_brick",
     goal = 650,
     give_item = "currency:minegeld",
     give_count = 50,
     title = "Stone Brick Collection"
   },
   copper = {
-    item = "default:cobble",
+    item = "default:cobblestone",
     goal = 2000,
     give_item = "currency:minegeld",
     give_count = 75,
@@ -60,7 +60,7 @@ local function save_progress(player_name, key, amount)
   storage:set_string("weekly_prog:" .. player_name, core.serialize(data))
 end
 
--- 2. FORMSPEC GUI LOBBY (Using the custom purple layout expanded for 4 items)
+-- 2. FORMSPEC GUI LOBBY (Using custom background texture expanded for 4 items)
 function weekly_sys.show_interface(player_name)
   local barley_current = get_progress(player_name, "barley")
   local stone_current = get_progress(player_name, "stone")
@@ -83,13 +83,13 @@ function weekly_sys.show_interface(player_name)
     core.colorize("#00ff00", "COMPLETED!") or 
     core.colorize("#a6b2c0", "Deposited: " .. copper_current .. " / " .. QUESTS.copper.goal)
 
-  -- Size adjusted to 10.2 height to accommodate all 4 quest rows clean and spacing out nicely
+  -- NOTE: Change "techblox_terminal_bg.png" to match your actual background image filename!
   local formspec = 
     "size[9.5,10.2]" ..
     "real_coordinates[true]" ..
-    "background[0,0;9.5,10.2;#161224;true]" .. 
+    "background[0,0;9.5,10.2;techblox_terminal_bg.png;true]" .. 
     "box[0,0;9.5,0.1;#a832a4]" ..
-    "label[0.6,0.6;" .. core.colorize("#e066ff", "QUESTER") .. "]" ..
+    "label[0.6,0.6;" .. core.colorize("#e066ff", "QUESTER TERMINAL") .. "]" ..
     "box[0.6,1.0;8.3,0.02;#ffffff15]" ..
     
     -- Quest 1: Barley/Wheat Slot
