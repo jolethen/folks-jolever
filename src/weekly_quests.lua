@@ -22,14 +22,14 @@ local QUESTS = {
     title = "Subterranean Wood Supply"
   },
   desert_stone = {
-    item = "default:stone_brick",
+    item = "default:stonebrick",
     goal = 650,
     give_item = "currency:minegeld",
     give_count = 50,
     title = "Stone Brick Collection"
   },
   copper = {
-    item = "default:cobblestone",
+    item = "default:cobble",
     goal = 2000,
     give_item = "currency:minegeld",
     give_count = 75,
