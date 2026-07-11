@@ -1,13 +1,13 @@
 local S = core.get_translator("folks")
 
 local DENJI_BUYS = {
-	item1 = {
-		item = "default:gold_lump",
+	crown = {
+		item = "forgotten_monsters:spider_eye_poisonous",
 		payout = 15
 	},
-	item2 = {
-		item = "default:diamond",
-		payout = 30
+	sword = {
+		item = "forgotten_monsters:undead_heart",
+		payout = 25
 	},
 	payout_item = "currency:minegeld"
 }
@@ -20,19 +20,19 @@ local function show_denji_gui(player_name)
 		"label[0.5,0.5;" .. core.colorize("#e066ff", "DENJI - THE RESOURCE TRADER") .. "]" ..
 		"box[0.5,0.9;7.5,0.02;#ffffff15]" ..
 		
-		-- Row 1: Gold
+		-- Row 1: Poisonous Spider Eye
 		"box[0.5,1.3;7.5,1.3;#ffffff03]" ..
-		"item_image[0.8,1.4;1,1;" .. DENJI_BUYS.item1.item .. "]" ..
-		"label[2.0,1.5;" .. core.colorize("#ffffff", "Sell Gold Lump") .. "]" ..
-		"label[2.0,2.0;" .. core.colorize("#00ff00", "Payout: " .. DENJI_BUYS.item1.payout .. " Minegeld") .. "]" ..
-		"button[5.6,1.5;2,0.6;sell_item1;Sell Stack]" ..
+		"item_image[0.8,1.4;1,1;" .. DENJI_BUYS.crown.item .. "]" ..
+		"label[2.0,1.5;" .. core.colorize("#ffffff", "Sell Poisonous Eye") .. "]" ..
+		"label[2.0,2.0;" .. core.colorize("#00ff00", "Payout: " .. DENJI_BUYS.crown.payout .. " Minegeld") .. "]" ..
+		"button[5.6,1.5;2,0.6;sell_crown;Sell Stack]" ..
 
-		-- Row 2: Diamond
+		-- Row 2: Undead Heart
 		"box[0.5,2.8;7.5,1.3;#ffffff03]" ..
-		"item_image[0.8,2.9;1,1;" .. DENJI_BUYS.item2.item .. "]" ..
-		"label[2.0,3.0;" .. core.colorize("#ffffff", "Sell Diamond") .. "]" ..
-		"label[2.0,3.5;" .. core.colorize("#00ff00", "Payout: " .. DENJI_BUYS.item2.payout .. " Minegeld") .. "]" ..
-		"button[5.6,3.0;2,0.6;sell_item2;Sell Stack]" ..
+		"item_image[0.8,2.9;1,1;" .. DENJI_BUYS.sword.item .. "]" ..
+		"label[2.0,3.0;" .. core.colorize("#ffffff", "Sell Undead Heart") .. "]" ..
+		"label[2.0,3.5;" .. core.colorize("#00ff00", "Payout: " .. DENJI_BUYS.sword.payout .. " Minegeld") .. "]" ..
+		"button[5.6,3.0;2,0.6;sell_sword;Sell Stack]" ..
 		
 		"button_exit[3.2,5.0;2,0.6;quit;Close]"
 
@@ -79,11 +79,11 @@ core.register_on_player_receive_fields(function(player, formname, fields)
 	local inv = player:get_inventory()
 	if not inv then return true end
 
-	if fields.sell_item1 then
-		handle_denji_sale(player, player_name, inv, DENJI_BUYS.item1)
+	if fields.sell_crown then
+		handle_denji_sale(player, player_name, inv, DENJI_BUYS.crown)
 		return true
-	elseif fields.sell_item2 then
-		handle_denji_sale(player, player_name, inv, DENJI_BUYS.item2)
+	elseif fields.sell_sword then
+		handle_denji_sale(player, player_name, inv, DENJI_BUYS.sword)
 		return true
 	end
 end)
