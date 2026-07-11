@@ -25,14 +25,14 @@ local function show_tom_gui(player_name)
 		"item_image[0.8,1.4;1,1;" .. TOM_BUYS.crown.item .. "]" ..
 		"label[2.0,1.5;" .. core.colorize("#ffffff", "Sell Skullking Crown") .. "]" ..
 		"label[2.0,2.0;" .. core.colorize("#00ff00", "Payout: " .. TOM_BUYS.crown.payout .. " Minegeld each") .. "]" ..
-		"button[5.6,1.5;2,0.6;sell_crown;Sell Stack]" ..
+		"button[5.6,1.5;2,0.6;sell_crown;Sell One]" ..
 
 		-- Row 2: Forgotten Sword
 		"box[0.5,2.8;7.5,1.3;#ffffff03]" ..
 		"item_image[0.8,2.9;1,1;" .. TOM_BUYS.sword.item .. "]" ..
 		"label[2.0,3.0;" .. core.colorize("#ffffff", "Sell Forgotten Sword") .. "]" ..
 		"label[2.0,3.5;" .. core.colorize("#00ff00", "Payout: " .. TOM_BUYS.sword.payout .. " Minegeld each") .. "]" ..
-		"button[5.6,3.0;2,0.6;sell_sword;Sell Stack]" ..
+		"button[5.6,3.0;2,0.6;sell_sword;Sell One]" ..
 		
 		"button_exit[3.2,5.0;2,0.6;quit;Close]"
 
@@ -40,36 +40,31 @@ local function show_tom_gui(player_name)
 end
 
 local function handle_tom_sale(player, player_name, inv, target_config)
-	local check_stack = ItemStack(target_config.item)
-	if check_stack:is_empty() or not inv:contains_item("main", check_stack) then
+	-- Create an explicit stack of exactly ONE item
+	local single_item = ItemStack(target_config.item .. " 1")
+
+	-- Securely check if they have at least 1 of the item
+	if not inv:contains_item("main", single_item) then
 		core.chat_send_player(player_name, core.colorize("#ff3333", "[Tom]: You don't have that item on you!"))
 		return
 	end
 
-	local total_sold = 0
-	for amt = 99, 1, -1 do
-		local test_stack = ItemStack(target_config.item .. " " .. amt)
-		if inv:contains_item("main", test_stack) then
-			total_sold = amt
-			break
-		end
+	-- Remove exactly 1 item
+	inv:remove_item("main", single_item)
+	
+	-- Flat payout calculation (no loops)
+	local total_payout = target_config.payout
+	local payout_stack = ItemStack(TOM_BUYS.payout_item .. " " .. total_payout)
+
+	if inv:room_for_item("main", payout_stack) then
+		inv:add_item("main", payout_stack)
+	else
+		local pos = player:get_pos()
+		if pos then core.add_item(pos, payout_stack) end
 	end
 
-	if total_sold > 0 then
-		inv:remove_item("main", ItemStack(target_config.item .. " " .. total_sold))
-		local total_payout = total_sold * target_config.payout
-		local payout_stack = ItemStack(TOM_BUYS.payout_item .. " " .. total_payout)
-
-		if inv:room_for_item("main", payout_stack) then
-			inv:add_item("main", payout_stack)
-		else
-			local pos = player:get_pos()
-			if pos then core.add_item(pos, payout_stack) end
-		end
-
-		core.chat_send_player(player_name, core.colorize("#00ff00", "[Tom]: Marvelous! Paid out " .. total_payout .. " Minegeld."))
-		show_tom_gui(player_name)
-	end
+	core.chat_send_player(player_name, core.colorize("#00ff00", "[Tom]: Marvelous! Paid out " .. total_payout .. " Minegeld."))
+	show_tom_gui(player_name)
 end
 
 core.register_on_player_receive_fields(function(player, formname, fields)
