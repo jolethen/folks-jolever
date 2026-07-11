@@ -32,18 +32,49 @@ end
 local witch_file = loadfile(modpath .. "/src/witch.lua")
 local witch_sys = witch_file and witch_file()
 
---- LOAD THE NEW MERCHANTS SAFELY RIGHT HERE
-local mike_file = loadfile(modpath .. "/src/mike.lua")
-local mike_sys = mike_file and mike_file()
+-- Safe-load Mike with pcall error wrapping
+local mike_file, mike_err = loadfile(modpath .. "/src/mike.lua")
+local mike_sys = nil
+if mike_file then
+  local success, result = pcall(mike_file)
+  if success then mike_sys = result
+  else core.log("error", "[Mike Merchant] Initialization runtime crash: " .. tostring(result)) end
+else
+  core.log("error", "[Mike Merchant] File loading crash/Missing path: " .. tostring(mike_err))
+end
 
-local denji_file = loadfile(modpath .. "/src/denji.lua")
-local denji_sys = denji_file and denji_file()
+-- Safe-load Denji with pcall error wrapping
+local denji_file, denji_err = loadfile(modpath .. "/src/denji.lua")
+local denji_sys = nil
+if denji_file then
+  local success, result = pcall(denji_file)
+  if success then denji_sys = result
+  else core.log("error", "[Denji Merchant] Initialization runtime crash: " .. tostring(result)) end
+else
+  core.log("error", "[Denji Merchant] File loading crash/Missing path: " .. tostring(denji_err))
+end
 
-local ben_file = loadfile(modpath .. "/src/ben.lua")
-local ben_sys = ben_file and ben_file()
+-- Safe-load Ben with pcall error wrapping
+local ben_file, ben_err = loadfile(modpath .. "/src/ben.lua")
+local ben_sys = nil
+if ben_file then
+  local success, result = pcall(ben_file)
+  if success then ben_sys = result
+  else core.log("error", "[Ben Merchant] Initialization runtime crash: " .. tostring(result)) end
+else
+  core.log("error", "[Ben Merchant] File loading crash/Missing path: " .. tostring(ben_err))
+end
 
-local tom_file = loadfile(modpath .. "/src/tom.lua")
-local tom_sys = tom_file and tom_file()
+-- Safe-load Tom with pcall error wrapping
+local tom_file, tom_err = loadfile(modpath .. "/src/tom.lua")
+local tom_sys = nil
+if tom_file then
+  local success, result = pcall(tom_file)
+  if success then tom_sys = result
+  else core.log("error", "[Tom Merchant] Initialization runtime crash: " .. tostring(result)) end
+else
+  core.log("error", "[Tom Merchant] File loading crash/Missing path: " .. tostring(tom_err))
+end
 
 roles.registry = {
   ["ghoti"] = {
@@ -152,26 +183,26 @@ roles.registry = {
   --- NEW FORGOTTEN MONSTERS MERCHANT ROLES
   ["mike"] = {
     action = function(player, npc_self)
-      if mike_sys then mike_sys.action(player, npc_self)
-      else core.chat_send_player(player:get_player_name(), "[System Error]: Mike module failed.") end
+      if mike_sys and mike_sys.on_interact then mike_sys.on_interact(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Mike's shop interface offline.")) end
     end
   },
   ["denji"] = {
     action = function(player, npc_self)
-      if denji_sys then denji_sys.action(player, npc_self)
-      else core.chat_send_player(player:get_player_name(), "[System Error]: Denji module failed.") end
+      if denji_sys and denji_sys.on_interact then denji_sys.on_interact(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Denji's shop interface offline.")) end
     end
   },
   ["ben"] = {
     action = function(player, npc_self)
-      if ben_sys then ben_sys.action(player, npc_self)
-      else core.chat_send_player(player:get_player_name(), "[System Error]: Ben module failed.") end
+      if ben_sys and ben_sys.on_interact then ben_sys.on_interact(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Ben's excavation shop offline.")) end
     end
   },
   ["tom"] = {
     action = function(player, npc_self)
-      if tom_sys then tom_sys.action(player, npc_self)
-      else core.chat_send_player(player:get_player_name(), "[System Error]: Tom module failed.") end
+      if tom_sys and tom_sys.on_interact then tom_sys.on_interact(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Tom's royal collection interface offline.")) end
     end
   }
 }
