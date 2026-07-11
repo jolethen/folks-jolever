@@ -1,40 +1,29 @@
 local S = core.get_translator("folks")
 
 local MIKE_BUYS = {
-	crown = {
-		item = "forgotten_monsters:zombie_flesh",
-		payout = 5
-	},
-	sword = {
-		item = "forgotten_monsters:cursed_bone",
-		payout = 10
+	item1 = {
+		item = "forgotten_monsters:eye_of_the_golem",
+		payout = 20
 	},
 	payout_item = "currency:minegeld"
 }
 
 local function show_mike_gui(player_name)
 	local formspec = 
-		"size[8.5,6]" ..
-		"background[0,0;8.5,6;techblox_terminal_bg.png;true]" .. 
+		"size[8.5,4.5]" ..
+		"background[0,0;8.5,4.5;techblox_terminal_bg.png;true]" .. 
 		"box[0,0;8.5,0.1;#a832a4]" ..
 		"label[0.5,0.5;" .. core.colorize("#e066ff", "MIKE - THE SCRAP MERCHANT") .. "]" ..
 		"box[0.5,0.9;7.5,0.02;#ffffff15]" ..
 		
-		-- Row 1: Zombie Flesh
+		-- Row 1: Eye of the Golem
 		"box[0.5,1.3;7.5,1.3;#ffffff03]" ..
-		"item_image[0.8,1.4;1,1;" .. MIKE_BUYS.crown.item .. "]" ..
-		"label[2.0,1.5;" .. core.colorize("#ffffff", "Sell Zombie Flesh") .. "]" ..
-		"label[2.0,2.0;" .. core.colorize("#00ff00", "Payout: " .. MIKE_BUYS.crown.payout .. " Minegeld") .. "]" ..
-		"button[5.6,1.5;2,0.6;sell_crown;Sell Stack]" ..
-
-		-- Row 2: Cursed Bone
-		"box[0.5,2.8;7.5,1.3;#ffffff03]" ..
-		"item_image[0.8,2.9;1,1;" .. MIKE_BUYS.sword.item .. "]" ..
-		"label[2.0,3.0;" .. core.colorize("#ffffff", "Sell Cursed Bone") .. "]" ..
-		"label[2.0,3.5;" .. core.colorize("#00ff00", "Payout: " .. MIKE_BUYS.sword.payout .. " Minegeld") .. "]" ..
-		"button[5.6,3.0;2,0.6;sell_sword;Sell Stack]" ..
+		"item_image[0.8,1.4;1,1;" .. MIKE_BUYS.item1.item .. "]" ..
+		"label[2.0,1.5;" .. core.colorize("#ffffff", "Sell Eye of the Golem") .. "]" ..
+		"label[2.0,2.0;" .. core.colorize("#00ff00", "Payout: " .. MIKE_BUYS.item1.payout .. " Minegeld each") .. "]" ..
+		"button[5.6,1.5;2,0.6;sell_item1;Sell Stack]" ..
 		
-		"button_exit[3.2,5.0;2,0.6;quit;Close]"
+		"button_exit[3.2,3.5;2,0.6;quit;Close]"
 
 	core.show_formspec(player_name, "folks:merchant_mike", formspec)
 end
@@ -79,11 +68,8 @@ core.register_on_player_receive_fields(function(player, formname, fields)
 	local inv = player:get_inventory()
 	if not inv then return true end
 
-	if fields.sell_crown then
-		handle_mike_sale(player, player_name, inv, MIKE_BUYS.crown)
-		return true
-	elseif fields.sell_sword then
-		handle_mike_sale(player, player_name, inv, MIKE_BUYS.sword)
+	if fields.sell_item1 then
+		handle_mike_sale(player, player_name, inv, MIKE_BUYS.item1)
 		return true
 	end
 end)
