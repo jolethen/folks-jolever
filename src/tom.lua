@@ -24,14 +24,14 @@ local function show_tom_gui(player_name)
 		"box[0.5,1.3;7.5,1.3;#ffffff03]" ..
 		"item_image[0.8,1.4;1,1;" .. TOM_BUYS.crown.item .. "]" ..
 		"label[2.0,1.5;" .. core.colorize("#ffffff", "Sell Skullking Crown") .. "]" ..
-		"label[2.0,2.0;" .. core.colorize("#00ff00", "Payout: " .. TOM_BUYS.crown.payout .. " Minegeld") .. "]" ..
+		"label[2.0,2.0;" .. core.colorize("#00ff00", "Payout: " .. TOM_BUYS.crown.payout .. " Minegeld each") .. "]" ..
 		"button[5.6,1.5;2,0.6;sell_crown;Sell Stack]" ..
 
 		-- Row 2: Forgotten Sword
 		"box[0.5,2.8;7.5,1.3;#ffffff03]" ..
 		"item_image[0.8,2.9;1,1;" .. TOM_BUYS.sword.item .. "]" ..
 		"label[2.0,3.0;" .. core.colorize("#ffffff", "Sell Forgotten Sword") .. "]" ..
-		"label[2.0,3.5;" .. core.colorize("#00ff00", "Payout: " .. TOM_BUYS.sword.payout .. " Minegeld") .. "]" ..
+		"label[2.0,3.5;" .. core.colorize("#00ff00", "Payout: " .. TOM_BUYS.sword.payout .. " Minegeld each") .. "]" ..
 		"button[5.6,3.0;2,0.6;sell_sword;Sell Stack]" ..
 		
 		"button_exit[3.2,5.0;2,0.6;quit;Close]"
