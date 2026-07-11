@@ -32,6 +32,19 @@ end
 local witch_file = loadfile(modpath .. "/src/witch.lua")
 local witch_sys = witch_file and witch_file()
 
+--- LOAD THE NEW MERCHANTS SAFELY RIGHT HERE
+local mike_file = loadfile(modpath .. "/src/mike.lua")
+local mike_sys = mike_file and mike_file()
+
+local denji_file = loadfile(modpath .. "/src/denji.lua")
+local denji_sys = denji_file and denji_file()
+
+local ben_file = loadfile(modpath .. "/src/ben.lua")
+local ben_sys = ben_file and ben_file()
+
+local tom_file = loadfile(modpath .. "/src/tom.lua")
+local tom_sys = tom_file and tom_file()
+
 roles.registry = {
   ["ghoti"] = {
     action = function(player, npc_self)
@@ -133,6 +146,32 @@ roles.registry = {
       else
         core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Witch transmuting altar offline."))
       end
+    end
+  },
+
+  --- NEW FORGOTTEN MONSTERS MERCHANT ROLES
+  ["mike"] = {
+    action = function(player, npc_self)
+      if mike_sys then mike_sys.action(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Mike module failed.") end
+    end
+  },
+  ["denji"] = {
+    action = function(player, npc_self)
+      if denji_sys then denji_sys.action(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Denji module failed.") end
+    end
+  },
+  ["ben"] = {
+    action = function(player, npc_self)
+      if ben_sys then ben_sys.action(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Ben module failed.") end
+    end
+  },
+  ["tom"] = {
+    action = function(player, npc_self)
+      if tom_sys then tom_sys.action(player, npc_self)
+      else core.chat_send_player(player:get_player_name(), "[System Error]: Tom module failed.") end
     end
   }
 }
