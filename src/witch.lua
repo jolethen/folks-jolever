@@ -27,7 +27,7 @@ function witch.show_interface(player_name)
   local formspec = 
     "size[9.5,7.0]" ..
     "real_coordinates[true]" ..
-    "background[0,0;9.5,7.0;#161224;true]" .. -- Dark purple/witchy tint atmosphere
+    "background[0,0;9.5,7.0;techblox_terminal_bg.png;true]" .. -- Replaced solid color with requested PNG background
     "box[0,0;9.5,0.1;#a832a4]" ..
     "label[0.6,0.6;" .. core.colorize("#e066ff", "WITCH'S GEMSTONE ALTAR") .. "]" ..
     "box[0.6,1.0;8.3,0.02;#ffffff15]" ..
