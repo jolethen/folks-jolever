@@ -32,6 +32,10 @@ end
 local witch_file = loadfile(modpath .. "/src/witch.lua")
 local witch_sys = witch_file and witch_file()
 
+-- Load the Banker module
+local banker_file = loadfile(modpath .. "/src/banker.lua")
+local banker_sys = banker_file and banker_file()
+
 roles.registry = {
   ["ghoti"] = {
     action = function(player, npc_self)
@@ -84,17 +88,11 @@ roles.registry = {
 
   ["banker"] = {
     action = function(player, npc_self)
-      local player_name = player:get_player_name()
-      local formspec_name = "folks:bank_interface"
-      local formspec = 
-        "size[6,4]" ..
-        "real_coordinates[true]" ..
-        "label[2.5,0.5;Bank]" .. 
-        "box[0.5,1.0;5,0.05;#ffffff]" ..
-        "label[0.5,1.8;Welcome to the banking terminal!]" ..
-        "label[0.5,2.3;Account services will appear here.]" ..
-        "button_exit[2.0,3.2;2.0,0.6;close;Exit]"
-      core.show_formspec(player_name, formspec_name, formspec)
+      if banker_sys and banker_sys.on_interact then
+        banker_sys.on_interact(player, npc_self)
+      else
+        core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Banker terminal offline."))
+      end
     end
   },
   
