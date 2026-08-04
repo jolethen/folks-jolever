@@ -134,6 +134,40 @@ roles.registry = {
         core.chat_send_player(player:get_player_name(), core.colorize("#ff3333", "[System Error]: Witch transmuting altar offline."))
       end
     end
+  },
+
+  -- Auction House NPCs (2 for viewing AH, 1 for direct claiming)
+  ["auctioneer_1"] = {
+    action = function(player, npc_self)
+      local player_name = player:get_player_name()
+      if eco_trade and eco_trade.show_ah then
+        eco_trade.show_ah(player_name, 1)
+      else
+        core.chat_send_player(player_name, core.colorize("#ff3333", "[System Error]: Auction House offline."))
+      end
+    end
+  },
+
+  ["auctioneer_2"] = {
+    action = function(player, npc_self)
+      local player_name = player:get_player_name()
+      if eco_trade and eco_trade.show_ah then
+        eco_trade.show_ah(player_name, 1)
+      else
+        core.chat_send_player(player_name, core.colorize("#ff3333", "[System Error]: Auction House offline."))
+      end
+    end
+  },
+
+  ["auction_reclaimer"] = {
+    action = function(player, npc_self)
+      local player_name = player:get_player_name()
+      if eco_trade and eco_trade.direct_claim_expired then
+        eco_trade.direct_claim_expired(player_name)
+      else
+        core.chat_send_player(player_name, core.colorize("#ff3333", "[System Error]: Reclaimer system offline."))
+      end
+    end
   }
 }
 
